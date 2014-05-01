@@ -34,11 +34,19 @@ class Server(Protocol):
 		data = data.rstrip()
 		if (data == 'identify'):
 			# identify to server
-			self.username = self.gs.identify()
-			print "username = " + self.username
+			self.username = self.gs.identify("identify")
+			msg = "id:" + self.username
+			self.transport.write(msg)
+		elif (data == 'reidentify'):
+			# username already taken, try again
+			self.username = self.gs.identify("reidentify")
+			msg = "id:" + self.username
+			self.transport.write(msg)
+		elif (data == 'idConfirmed'):
+			print "ID " + self.username + " confirmed!"
 
 
-	def identify(self):
+	def initialIdentify(self):
 		c.gs.identify()
 		print "un: " + client.username
 	
