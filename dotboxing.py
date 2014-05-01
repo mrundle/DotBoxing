@@ -30,7 +30,8 @@ class GameSpace:
 	def loop(self):
 
 		# Code for one loop of the game logic
-
+		# Note: loop will be called by client.py, not in this file
+		
 		# handle user input
 
 		# send ticks to game objects
