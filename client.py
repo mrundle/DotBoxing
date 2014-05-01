@@ -9,32 +9,38 @@ from dotboxing import GameSpace
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory
 
-SERVER_HOST = "localhost"	# (global) should be whatever host server.py is running on
-SERVER_PORT = 40035			# (global) should match the server.py file
+SERVER_HOST = 'localhost'   # (global) should be whatever host server.py is running on
+SERVER_PORT = 40035         # (global) should match the server.py file
 
-client      = None          # (global) will contain the client instance
-connection  = None			# (global) will contain the server connection
+#objects  = {}               # (global) will contain the server connection
 
 
-class client:
-
+class Server(Protocol):	
 	def __init__(self):
-		print "Client initialized"
-
-		# import GameSpace instance
-		self.gs = GameSpace()
-
-		# connect to server
-		reactor.connectTCP(SERVER_HOST, SERVER_PORT, ServerClientFactory())
-		reactor.run()
-
-class Server(Protocol):
+		# initialize vars
+		self.username = ''
 
 	def connectionMade(self):
-		print "Connected to server"
+		print "Connected to server."
+
+		# create client, pass connection
+		
+		# import GameSpace instance
+		print "Initializing game instance..."
+		self.gs = GameSpace()
+		print "Game instance initialized."
 
 	def dataReceived(self, data):
-		pass
+		data = data.rstrip()
+		if (data == 'identify'):
+			# identify to server
+			self.username = self.gs.identify()
+			print "username = " + self.username
+
+
+	def identify(self):
+		c.gs.identify()
+		print "un: " + client.username
 	
 
 class ServerClientFactory(ReconnectingClientFactory):
@@ -51,4 +57,6 @@ class ServerClientFactory(ReconnectingClientFactory):
 		
 
 if __name__ == "__main__":
-	client = client()
+	# connect to server
+	reactor.connectTCP(SERVER_HOST, SERVER_PORT, ServerClientFactory())
+	reactor.run()

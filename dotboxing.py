@@ -38,6 +38,17 @@ class GameSpace:
 		# blit game objects
 
 		pass
+
+	def identify(self):
+		# identify to server (pick username)
+		# NOTE: This is stored in client.py,
+		#       as it shouldn't be needed for game logic.
+		#       The prompt needs to go here because the 
+		#       it needs to be handled graphically via pygame.
+		# TODO: Handle via pygame instead of command line
+		return raw_input("Enter a username: ")
+			
+		
 		
 
 

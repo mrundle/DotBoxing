@@ -6,12 +6,14 @@ from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.defer import DeferredQueue
 
 LISTEN_PORT = 40035
+users = {}
 
 class Client(Protocol):
 	def __init__(self):
 		self.clientName = ''
 	def connectionMade(self):
 		print "connected to client"
+		self.transport.write("identify")
 	def dataReceived(self,data):
 		pass
 	def connectionLost(self,reason):
