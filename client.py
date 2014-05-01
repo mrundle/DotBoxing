@@ -8,6 +8,7 @@ from dotboxing import GameSpace
 # import networking
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory
+from twisted.internet.task import LoopingCall
 
 SERVER_HOST = 'localhost'   # (global) should be whatever host server.py is running on
 SERVER_PORT = 40035         # (global) should match the server.py file
@@ -25,10 +26,6 @@ class Server(Protocol):
 
 		# create client, pass connection
 		
-		# import GameSpace instance
-		print "Initializing game instance..."
-		self.gs = GameSpace()
-		print "Game instance initialized."
 
 	def dataReceived(self, data):
 		data = data.rstrip()
@@ -65,6 +62,16 @@ class ServerClientFactory(ReconnectingClientFactory):
 		
 
 if __name__ == "__main__":
+
+	# import GameSpace instance
+	print "Initializing game instance..."
+	reactor.gs = GameSpace()
+	print "Game instance initialized."
+
+	# start game loop
+	lc = LoopingCall(reactor.gs.loop)
+	lc.start(1/60)
+	
 	# connect to server
 	reactor.connectTCP(SERVER_HOST, SERVER_PORT, ServerClientFactory())
 	reactor.run()

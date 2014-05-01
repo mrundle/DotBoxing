@@ -14,6 +14,7 @@ class GameSpace:
 		# Set up the screen
 		self.size   =  self.width, self.height = 640, 480
 		self.black  =  0, 0, 0
+		self.white = 255, 255, 255
 		self.screen =  pygame.display.set_mode(self.size)
 
 		# set up button click values
@@ -37,6 +38,7 @@ class GameSpace:
 		# send ticks to game objects
 
 		# blit game objects
+		self.screen.fill(self.black)
 
 		pass
 
