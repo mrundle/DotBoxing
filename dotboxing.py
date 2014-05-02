@@ -14,7 +14,7 @@ class GameSpace:
 		# colors
 		self.black  =  0, 0, 0
 		self.white = 255, 255, 255
-		self.grey = 224, 224, 224
+		self.grey = 200, 200, 200
 
 		# Set up the screen
 		self.size   =  self.width, self.height = 640, 480
@@ -39,6 +39,13 @@ class GameSpace:
 		# Note: loop will be called by client.py, not in this file
 		
 		# handle user input
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				return
+			elif event.type == MOUSEBUTTONUP:
+				#do shit
+
+		
 
 		# send ticks to game objects
 
@@ -73,6 +80,7 @@ class GameBoard(pygame.Surface):
 		self.gs = gs
 		pygame.Surface.__init__(self,(self.gs.width,self.gs.height))
 		self.fill(self.gs.white)
+		self.separators = list()
 		
 		self.dot_x = 10 # number of dots on one side of the square
 		self.margin = 30
@@ -91,33 +99,55 @@ class GameBoard(pygame.Surface):
 				pygame.draw.circle(self, self.gs.black,(i,j),self.dot_radius)
 				
 		# make the separators
-		
-		
+		for i in range(self.x, self.width, self.interval):
+			for j in range(self.y, self.height, self.interval):
+			
+				if j < (self.height-self.interval):
+					temp = Separator(self.gs,10,self.interval-2*self.dot_radius,"vert")
+					self.blit(temp,(i-5,j+3))
+					self.separators.append(temp)
+					
+				if i < (self.width-self.interval):
+					temp = Separator(self.gs,self.interval-2*self.dot_radius,10,"horz")
+					self.blit(temp,(i+3,j-5))
+					self.separators.append(temp)
+				
 # A "Separator" surface - the things that connect the dots.
 # The actual surface is a rectangle, with the polygon drawn on it
 class Separator(pygame.Surface):
 
-	def __init__(self,gs,width,height):
+	def __init__(self,gs,width,height,mode):
 	
 		# initial setup
-		pygame.Surface.__init__(self,width,height)
+		pygame.Surface.__init__(self,(width,height))
 		self.height = height
 		self.width = width
 		self.gs = gs
 		self.fill(self.gs.white)
 		self.spacing = 5
-		self.x = 5
-		self.y = 0
+		self.mode = mode
 		
 		# draw polygon
-		self.head = (self.x, self.y)
-		self.tail = (self.x, self.y+self.height)
-		self.r_shoulder = (self.x+self.spacing, self.y+self.spacing)
-		self.l_shoulder = (self.x-self.spacing, self.y+self.spacing)
-		self.r_leg = (self.x+self.spacing, self.y-self.spacing)
-		self.l_leg = (self.x-self.spacing, self.y-self.spacing)
-		pointlist = (self.head,self.tail,self.r_shoulder,self.l_shoulder,self.r_leg,self.l_leg)
-		#pygame.draw.polygon(self,self.gs,game
+		if mode == "vert":
+			self.x = 5
+			self.y = 0
+			self.head = (self.x, self.y)
+			self.tail = (self.x, self.y+self.height)
+			self.r_shoulder = (self.x+self.spacing, self.y+self.spacing)
+			self.l_shoulder = (self.x-self.spacing, self.y+self.spacing)
+			self.r_leg = (self.x+self.spacing, self.y+self.height-self.spacing)
+			self.l_leg = (self.x-self.spacing, self.y+self.height-self.spacing)
+		if mode == "horz":
+			self.x = 0
+			self.y = 5
+			self.head = (self.x, self.y)
+			self.tail = (self.x+self.width, self.y)
+			self.r_shoulder = (self.x+self.spacing, self.y+self.spacing)
+			self.l_shoulder = (self.x+self.spacing, self.y-self.spacing)
+			self.r_leg = (self.x+self.width-self.spacing, self.y+self.spacing)
+			self.l_leg = (self.x+self.width-self.spacing, self.y-self.spacing)
+		pointlist = (self.head,self.r_shoulder,self.r_leg,self.tail,self.l_leg,self.l_shoulder)
+		pygame.draw.polygon(self,self.gs.grey,pointlist)
 
 
 
