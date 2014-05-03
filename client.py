@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
 	# import GameSpace instance
 	print "Initializing game instance..."
-	reactor.gs = GameSpace()
+	reactor.gs = GameSpace(reactor)
 	print "Game instance initialized."
 
 	# start game loop

@@ -39,7 +39,7 @@ class GameSpace:
 		self.board = GameBoard(self)
 		
 		# set up gamespace variable
-		
+		self.turn = "Mine"
 		
 		print "GameSpace initialized"
 
@@ -176,13 +176,26 @@ class Separator(pygame.sprite.Sprite):
 	# check if object is clicked, takes action if so
 	def On_Click(self):
 	
+		# skip if not my turn
+		if self.gs.turn == "Other":
+			return
+			
+		# error check for improper turn handling
+		if self.gs.turn != "Mine":
+			print "Error: Improper turn handling"
+			self.gs.reactor.stop()
+			
 		# get mouse position
 		mx, my = pygame.mouse.get_pos()
 		
 		# test if position is inside object rect
 		if self.rect.collidepoint(mx,my) == True:
+		
+			# change separator color
 			self.color = self.gs.blue
 			pygame.draw.polygon(self.image,self.color,self.pointlist)
-
+			
+			# switch turn
+			self.gs.turn = "Other"
 
 
