@@ -13,8 +13,6 @@ from twisted.internet.task import LoopingCall
 SERVER_HOST = 'localhost'   # (global) should be whatever host server.py is running on
 SERVER_PORT = 40035         # (global) should match the server.py file
 
-#objects  = {}               # (global) will contain the server connection
-
 
 class Server(Protocol):	
 	def __init__(self):
@@ -31,28 +29,35 @@ class Server(Protocol):
 		data = data.rstrip()
 		if (data == 'identify'):
 			# identify to server
-			self.username = self.gs.identify("identify")
-			msg = "id:" + self.username
-			self.transport.write(msg)
+			#self.username = reactor.gs.identify("identify")
+			reactor.gs.identify("identify")			
+			# msg = "id:" + self.username
+			# self.transport.write(msg)
 		elif (data == 'reidentify'):
 			# username already taken, try again
-			self.username = self.gs.identify("reidentify")
+			self.username = reactor.gs.identify("reidentify")
 			msg = "id:" + self.username
 			self.transport.write(msg)
 		elif (data == 'idConfirmed'):
 			print "ID " + self.username + " confirmed!"
 
-
-	def initialIdentify(self):
-		c.gs.identify()
-		print "un: " + client.username
+	def checkGame(self):
+		pass
 	
 
 class ServerClientFactory(ReconnectingClientFactory):
 
 	def buildProtocol(self,addr):
+
 		connection = Server()
+		
+		# start game loop
+		lc = LoopingCall(reactor.gs.loop)
+		lc.start(1/60)
+
+		reactor.gs.protocol = connection
 		return connection
+
 	def clientConnectionLost(self,connector, reason):
 		print "Lost connection to server.. Reason: " + str(reason)
 		ReconnectingClientFactory.clientConnectionLost(self,connector, reason)
@@ -68,10 +73,7 @@ if __name__ == "__main__":
 	reactor.gs = GameSpace(reactor)
 	print "Game instance initialized."
 
-	# start game loop
-	lc = LoopingCall(reactor.gs.loop)
-	lc.start(1/60)
-	
 	# connect to server
 	reactor.connectTCP(SERVER_HOST, SERVER_PORT, ServerClientFactory())
+	
 	reactor.run()

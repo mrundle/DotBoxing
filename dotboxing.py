@@ -12,16 +12,20 @@ from pygame.locals import *
 class GameSpace:
 
 	def __init__(self,reactor):
+
 		# Initialize pygame
 		pygame.init()
 		pygame.mixer.init()
-		self.reactor=reactor
+
+		# Initialize networking vars
+		self.reactor  = reactor
+		self.protocol = None
 
 		# colors
-		self.black  =  0, 0, 0
-		self.white = 255, 255, 255
-		self.grey = 200, 200, 200
-		self.blue = 0,0,204
+		self.black  =   0, 0, 0
+		self.white  = 255, 255, 255
+		self.grey   = 200, 200, 200
+		self.blue   =   0,   0,204
 
 		# Set up the screen
 		self.size   =  self.width, self.height = 640, 480
@@ -83,7 +87,13 @@ class GameSpace:
 		msg = msg.rstrip()
 		if msg == "identify":
 			# initial prompt
-			return raw_input("Enter a username: ")
+			#return raw_input("Enter a username: ")
+			un = raw_input("Enter a username: ")
+			msg = "id:" + un
+			if self.protocol == None:
+				print "fuck everything"
+				return
+			self.protocol.transport.write(msg)
 		elif msg == "reidentify":
 			# username already taken
 			return raw_input("Name already taken. Enter a username: ")
