@@ -76,29 +76,6 @@ class GameSpace:
 	def On_Click(self):
 		for Separator in self.board.separators:
 			Separator.On_Click()
-
-
-	def identify(self, msg):
-		# identify to server (pick username)
-		# NOTE: This is stored in client.py,
-		#       as it shouldn't be needed for game logic.
-		#       The prompt needs to go here because the 
-		#       it needs to be handled graphically via pygame.
-		# TODO: Handle via pygame instead of command line
-		msg = msg.rstrip()
-		if msg == "identify":
-			# initial prompt
-			#return raw_input("Enter a username: ")
-			un = raw_input("Enter a username: ")
-			msg = "id:" + un
-			if self.protocol == None:
-				print "fuck everything"
-				return
-			self.protocol.transport.write(msg)
-		elif msg == "reidentify":
-			# username already taken
-			return raw_input("Name already taken. Enter a username: ")
-			
 			
 	# actions to take when move data received
 	def opponentMove(self,id):

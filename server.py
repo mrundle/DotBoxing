@@ -15,7 +15,7 @@ waiting = []
 
 class Client(Protocol):
 	def __init__(self):
-		self.clientName = ''
+		self.username = ''
 
 	def connectionMade(self):
 		print "connected to client"
@@ -29,38 +29,61 @@ class Client(Protocol):
 
 		if dataArray[0] == "id":
 			# user is attempting to create a username
-			username = dataArray[1]
+			name = dataArray[1]
 			# check to see if it is already in use
-			if username in users:
+			if name in users or name == '':
 				# if so, send "reidentify"
 				self.transport.write("reidentify")
 			else:
-				# if not, add to users and send "idConfirmed"
-				users[username] = self
-				waiting.append(username)
+				# if not, add to users and waiting and send "idConfirmed"
+				self.username = name
+				users[self.username] = self
+				waiting.append(self.username)
 				self.transport.write("idConfirmed")
 				# NOW - LOOP UNTIL OPPENENTS ARE ASSIGNED
 				assigned = False
-				while username in waiting:
-					for user in waiting:
-						if user != username:
-							self.tranport.write("opponent:" + user)
-							users[user].transport.write("opponent:" + username)
-							waiting.remove(user)
-							waiting.remove(username)
+				self.printUsers()
+				self.printWaiting()
+				for user in waiting:
+					if user != self.username:
+						print "ASSIGNED " + self.username + " TO " + user
+						turn = 0
+						# the user waiting the longest will have first turn
+						turn = turn + 1
+						self.transport.write("opponent:" + user + ":" + str(turn))
+						# the user just joining will have the second turn
+						turn = turn + 1
+						users[user].transport.write("opponent:" + self.username + ":" + str(turn))
+						waiting.remove(user)
+						waiting.remove(self.username)
 
 		elif dataArray[0] == "move":
 			moveID = dataArray[1]
 			# TODO: send move to opponent
 		
-		# <DEBUG>
+	def printUsers(self):
 		print "current list of users: "
 		for key in users:
 			print key
+
+	def printWaiting(self):
+		print "current list of waiting users: "
+		for user in waiting:
+			print user
 		
 
 	def connectionLost(self,reason):
-		print "dropped a client connection"
+		print "dropped client connection (" + self.username + ")"
+		# delete from users list
+		try:
+			del users[self.username]
+		except KeyError:
+			pass
+		# delete from waiting queue if there
+		if self.username in waiting:
+			waiting.remove(self.username)
+		# TODO: Notify others that connection has been lost
+		# necessary for ending games.
 
 class ClientFactory(Factory):
 	def buildProtocol(self,addr):
