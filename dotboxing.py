@@ -26,6 +26,7 @@ class GameSpace:
 		self.white  = 255, 255, 255
 		self.grey   = 200, 200, 200
 		self.blue   =   0,   0,204
+		self.red = 255,0,0
 
 		# Set up the screen
 		self.size   =  self.width, self.height = 640, 480
@@ -57,7 +58,7 @@ class GameSpace:
 			if event.type == QUIT:
 				self.reactor.stop()
 			elif event.type == MOUSEBUTTONUP:
-				print "Mouse clicked!"
+				#print "Mouse clicked!"
 				self.On_Click()
 
 		# send ticks to game objects
@@ -98,6 +99,31 @@ class GameSpace:
 			# username already taken
 			return raw_input("Name already taken. Enter a username: ")
 			
+			
+	# actions to take when move data received
+	def opponentMove(self,id):
+		
+		# skip if its my turn
+		if self.gs.turn == "Mine":
+			return
+			
+		# error check for improper turn handling
+		if self.gs.turn != "Other":
+			print "Error: Improper turn handling"
+			self.gs.reactor.stop()
+			
+		# Find Separator
+		for Separator in self.board.separators:
+			if Separator.id == id:
+			
+				# change separator color
+				self.color = self.gs.red
+				pygame.draw.polygon(self.image,self.color,self.pointlist)
+			
+				# switch turn
+				self.gs.turn = "Mine"
+				return
+			
 
 # The screen when the game is being played (as opposed to the lobby)
 class GameBoard(pygame.Surface):
@@ -134,12 +160,14 @@ class GameBoard(pygame.Surface):
 					temp = Separator(self.gs,10,self.interval-2*self.dot_radius,"vert")
 					temp.rect.x = i - temp.spacing   # account for spacing
 					temp.rect.y = j + self.dot_radius   # account for dot radius
+					temp.id = str(temp.rect.x) + "," + str(temp.rect.y)
 					self.separators.add(temp)
 					
 				if i < (self.width-self.interval):
 					temp = Separator(self.gs,self.interval-2*self.dot_radius,10,"horz")
 					temp.rect.x = i + self.dot_radius   # account for dot radius
 					temp.rect.y = j - temp.spacing   # account for spacing
+					temp.id = str(temp.rect.x) + "," + str(temp.rect.y)
 					self.separators.add(temp)
 				
 # A "Separator" surface - the things that connect the dots.
@@ -207,5 +235,6 @@ class Separator(pygame.sprite.Sprite):
 			
 			# switch turn
 			self.gs.turn = "Other"
+			self.gs.protocol.sendMove(self.id)
 
 
