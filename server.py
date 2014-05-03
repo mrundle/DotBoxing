@@ -11,6 +11,7 @@ LISTEN_PORT = 40035
 # val: connection instance
 # use: users[username].transport.write(...)
 users = {}
+waiting = []
 
 class Client(Protocol):
 	def __init__(self):
@@ -25,6 +26,7 @@ class Client(Protocol):
 		data = data.rstrip()
 		# should come in the form of "id:username"
 		dataArray = data.split(':')
+
 		if dataArray[0] == "id":
 			# user is attempting to create a username
 			username = dataArray[1]
@@ -35,7 +37,21 @@ class Client(Protocol):
 			else:
 				# if not, add to users and send "idConfirmed"
 				users[username] = self
+				waiting.append(username)
 				self.transport.write("idConfirmed")
+				# NOW - LOOP UNTIL OPPENENTS ARE ASSIGNED
+				assigned = False
+				while username in waiting:
+					for user in waiting:
+						if user != username:
+							self.tranport.write("opponent:" + user)
+							users[user].transport.write("opponent:" + username)
+							waiting.remove(user)
+							waiting.remove(username)
+
+		elif dataArray[0] == "move":
+			moveID = dataArray[1]
+			# TODO: send move to opponent
 		
 		# <DEBUG>
 		print "current list of users: "
