@@ -3,18 +3,25 @@
 # Programming Paradigms PyGameTwisted Project
 import pygame
 import math
+import sys
+import os
+import getopt
+from socket import *
+from pygame.locals import *
 
 class GameSpace:
 
-	def __init__(self):
+	def __init__(self,reactor):
 		# Initialize pygame
 		pygame.init()
 		pygame.mixer.init()
+		self.reactor=reactor
 
 		# colors
 		self.black  =  0, 0, 0
 		self.white = 255, 255, 255
 		self.grey = 200, 200, 200
+		self.blue = 0,0,204
 
 		# Set up the screen
 		self.size   =  self.width, self.height = 640, 480
@@ -31,6 +38,9 @@ class GameSpace:
 		# set up game objects
 		self.board = GameBoard(self)
 		
+		# set up gamespace variable
+		
+		
 		print "GameSpace initialized"
 
 	def loop(self):
@@ -41,19 +51,27 @@ class GameSpace:
 		# handle user input
 		for event in pygame.event.get():
 			if event.type == QUIT:
-				return
+				self.reactor.stop()
 			elif event.type == MOUSEBUTTONUP:
-				#do shit
-
-		
+				print "Mouse clicked!"
+				self.On_Click()
 
 		# send ticks to game objects
 
 		# blit game objects
 		self.screen.blit(self.board,(0,0))
-
+		for Separator in self.board.separators:
+			self.screen.blit(Separator.image,Separator.rect)
+		
 		# Flip the display
 		pygame.display.flip()
+		
+		
+	# calls game objects On_Click functions
+	def On_Click(self):
+		for Separator in self.board.separators:
+			Separator.On_Click()
+
 
 	def identify(self, msg):
 		# identify to server (pick username)
@@ -80,10 +98,10 @@ class GameBoard(pygame.Surface):
 		self.gs = gs
 		pygame.Surface.__init__(self,(self.gs.width,self.gs.height))
 		self.fill(self.gs.white)
-		self.separators = list()
+		self.separators = pygame.sprite.Group()
 		
 		self.dot_x = 10 # number of dots on one side of the square
-		self.margin = 30
+		self.margin = 50
 		self.x = self.margin
 		self.y = self.margin
 		self.width = self.gs.width-self.margin
@@ -104,28 +122,33 @@ class GameBoard(pygame.Surface):
 			
 				if j < (self.height-self.interval):
 					temp = Separator(self.gs,10,self.interval-2*self.dot_radius,"vert")
-					self.blit(temp,(i-5,j+3))
-					self.separators.append(temp)
+					temp.rect.x = i - temp.spacing   # account for spacing
+					temp.rect.y = j + self.dot_radius   # account for dot radius
+					self.separators.add(temp)
 					
 				if i < (self.width-self.interval):
 					temp = Separator(self.gs,self.interval-2*self.dot_radius,10,"horz")
-					self.blit(temp,(i+3,j-5))
-					self.separators.append(temp)
+					temp.rect.x = i + self.dot_radius   # account for dot radius
+					temp.rect.y = j - temp.spacing   # account for spacing
+					self.separators.add(temp)
 				
 # A "Separator" surface - the things that connect the dots.
 # The actual surface is a rectangle, with the polygon drawn on it
-class Separator(pygame.Surface):
+class Separator(pygame.sprite.Sprite):
 
 	def __init__(self,gs,width,height,mode):
 	
 		# initial setup
-		pygame.Surface.__init__(self,(width,height))
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.Surface((width,height))
+		self.rect = self.image.get_rect()
 		self.height = height
 		self.width = width
 		self.gs = gs
-		self.fill(self.gs.white)
+		self.image.fill(self.gs.white)
 		self.spacing = 5
 		self.mode = mode
+		self.color = self.gs.grey
 		
 		# draw polygon
 		if mode == "vert":
@@ -146,9 +169,20 @@ class Separator(pygame.Surface):
 			self.l_shoulder = (self.x+self.spacing, self.y-self.spacing)
 			self.r_leg = (self.x+self.width-self.spacing, self.y+self.spacing)
 			self.l_leg = (self.x+self.width-self.spacing, self.y-self.spacing)
-		pointlist = (self.head,self.r_shoulder,self.r_leg,self.tail,self.l_leg,self.l_shoulder)
-		pygame.draw.polygon(self,self.gs.grey,pointlist)
+		self.pointlist = (self.head,self.r_shoulder,self.r_leg,self.tail,self.l_leg,self.l_shoulder)
+		pygame.draw.polygon(self.image,self.color,self.pointlist)
+		
 
+	# check if object is clicked, takes action if so
+	def On_Click(self):
+	
+		# get mouse position
+		mx, my = pygame.mouse.get_pos()
+		
+		# test if position is inside object rect
+		if self.rect.collidepoint(mx,my) == True:
+			self.color = self.gs.blue
+			pygame.draw.polygon(self.image,self.color,self.pointlist)
 
 
 
