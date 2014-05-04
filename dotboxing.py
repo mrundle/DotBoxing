@@ -61,7 +61,8 @@ class GameSpace:
 				#print "Mouse clicked!"
 				self.On_Click()
 
-		# send ticks to game objects
+		# update game objects
+		self.CompleteSquares()
 
 		# blit game objects
 		self.screen.blit(self.board,(0,0))
@@ -90,16 +91,25 @@ class GameSpace:
 			self.reactor.stop()
 			
 		# Find Separator
+		Separator = self.board.FindSeparator(_id)
+			
+		# change separator color
+		Separator.color = self.red
+		pygame.draw.polygon(Separator.image,Separator.color,Separator.pointlist)
+			
+		# switch turn
+		self.turn = "Mine"
+		Separator.clicked = True
+		return
+		
+		
+	# check for completed squares, mark accordingly
+	def CompleteSquares(self):
+	
+		# print "Complete Square function called"
+		
 		for Separator in self.board.separators:
-			if Separator.id == _id:
-			
-				# change separator color
-				Separator.color = self.red
-				pygame.draw.polygon(Separator.image,Separator.color,Separator.pointlist)
-			
-				# switch turn
-				self.turn = "Mine"
-				return
+			Separator.CompleteSquare()
 			
 
 # The screen when the game is being played (as opposed to the lobby)
@@ -114,7 +124,7 @@ class GameBoard(pygame.Surface):
 		self.separators = pygame.sprite.Group()
 		
 		self.dot_x = 10 # number of dots on one side of the square
-		self.margin = 50
+		self.margin = 80
 		self.x = self.margin
 		self.y = self.margin
 		self.width = self.gs.width-self.margin
@@ -130,8 +140,9 @@ class GameBoard(pygame.Surface):
 				pygame.draw.circle(self, self.gs.black,(i,j),self.dot_radius)
 				
 		# make the separators
-		for i in range(self.x, self.width, self.interval):
-			for j in range(self.y, self.height, self.interval):
+		for j in range(self.y, self.height, self.interval):
+			for i in range(self.x, self.width, self.interval):
+			
 			
 				if j < (self.height-self.interval):
 					temp = Separator(self.gs,10,self.interval-2*self.dot_radius,"vert")
@@ -145,7 +156,33 @@ class GameBoard(pygame.Surface):
 					temp.rect.x = i + self.dot_radius   # account for dot radius
 					temp.rect.y = j - temp.spacing   # account for spacing
 					temp.id = str(temp.rect.x) + "," + str(temp.rect.y)
+					
+					# add neighbors (for checking win condition)
+					# left neighbor is left and up, right neighbor is right and up, far neighbor is across the above square
+					temp.left_neighbor = self.FindSeparator(str(i - temp.spacing) + "," + str(j - self.interval + self.dot_radius))
+					temp.right_neighbor = self.FindSeparator(str(i - temp.spacing + self.interval) + "," + str(j - self.interval + self.dot_radius))
+					temp.far_neighbor = self.FindSeparator(str(temp.rect.x) + "," + str(temp.rect.y - self.interval))
+					
+					#if temp.left_neighbor != None:
+						#print "Left neighbor is not None!"
+					#if temp.right_neighbor != None:
+						#print "Right neighbor is not None!"
+					#if temp.far_neighbor != None:
+						#print "Far neighbor is not None!"
+					
 					self.separators.add(temp)
+	
+	
+	# helper function that locates separators based on id				
+	def FindSeparator(self,_id):
+	
+		for Separator in self.separators:
+			if Separator.id == _id:
+				return Separator
+		
+		# If none found, return None
+		return None
+					
 				
 # A "Separator" surface - the things that connect the dots.
 # The actual surface is a rectangle, with the polygon drawn on it
@@ -164,6 +201,14 @@ class Separator(pygame.sprite.Sprite):
 		self.spacing = 5
 		self.mode = mode
 		self.color = self.gs.grey
+		self.clicked = False
+		self.complete = False
+		
+		# initialize neighbors
+		self.left_neighbor = None
+		self.right_neighbor = None
+		self.far_neighbor = None
+		
 		
 		# draw polygon
 		if mode == "vert":
@@ -200,6 +245,10 @@ class Separator(pygame.sprite.Sprite):
 			print "Error: Improper turn handling"
 			self.gs.reactor.stop()
 			
+		# skip if clicked already
+		if self.clicked == True:
+			return
+			
 		# get mouse position
 		mx, my = pygame.mouse.get_pos()
 		
@@ -210,8 +259,43 @@ class Separator(pygame.sprite.Sprite):
 			self.color = self.gs.blue
 			pygame.draw.polygon(self.image,self.color,self.pointlist)
 			
-			# switch turn
+			# switch turn and indicate clicked
+			self.clicked = True
 			self.gs.turn = "Other"
 			self.gs.protocol.sendMove(self.id)
+			
+		
+	# check to see if square is completed, takes action if so
+	def CompleteSquare(self):
+	
+		# print "CompleteSquare function called"	
+		
+		if self.complete == True:
+			return
+
+		if self.left_neighbor == None:
+			return
+		if self.right_neighbor == None:
+			return
+		if self.far_neighbor == None:
+			return
+		
+		# print "Checking for complete square:"
+		
+		# check for squares
+		if self.left_neighbor.clicked==self.right_neighbor.clicked==self.far_neighbor.clicked==self.clicked==True:
+			
+			# if square is complete, fill in the square with the appropriate color
+			if self.gs.turn == "Mine":
+				fill_color = self.gs.red
+			else:
+				fill_color = self.gs.blue
+				
+			square_width = self.gs.board.interval - self.gs.board.dot_radius*2
+			square = pygame.Rect(self.rect.x+3, self.rect.y-square_width+5,square_width-6,square_width-6)
+			pygame.draw.rect(self.gs.board,fill_color,square)
+			self.complete = True
+		
+		
 
 
