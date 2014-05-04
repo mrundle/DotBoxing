@@ -25,6 +25,7 @@ class Server(Protocol):
 		
 
 	def dataReceived(self, msg):
+		print msg #debug
 		msg = msg.rstrip()
 		data = msg.split(':')
 		if (data[0] == 'opponent'):
@@ -43,6 +44,7 @@ class Server(Protocol):
 			else:
 				print "It is not my turn."
 				reactor.gs.turn = "Other"
+
 		if (data[0] == 'identify'):
 			# identify to server
 			self.username = self.identify("identify")		
@@ -62,14 +64,13 @@ class Server(Protocol):
 
 	def sendMove(self,moveID):
 		# send move to the opponent
-		pass
+		self.transport.write("move:" + self.opponent + ":" + moveID)
 
 	def identify(self, msg):
 		# identify to server (pick username)
 		msg = msg.rstrip()
 		if msg == "identify":
 			# initial prompt
-			#return raw_input("Enter a username: ")
 			return raw_input("Enter a username: ")
 		elif msg == "reidentify":
 			# username already taken

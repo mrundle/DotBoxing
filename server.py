@@ -39,7 +39,7 @@ class Client(Protocol):
 				self.username = name
 				users[self.username] = self
 				waiting.append(self.username)
-				self.transport.write("idConfirmed")
+				#self.transport.write("idConfirmed")
 				# NOW - LOOP UNTIL OPPENENTS ARE ASSIGNED
 				assigned = False
 				self.printUsers()
@@ -56,10 +56,12 @@ class Client(Protocol):
 						users[user].transport.write("opponent:" + self.username + ":" + str(turn))
 						waiting.remove(user)
 						waiting.remove(self.username)
-
 		elif dataArray[0] == "move":
-			moveID = dataArray[1]
-			# TODO: send move to opponent
+			destination = dataArray[1].rstrip()
+			moveID      = dataArray[2].rstrip()
+			users[destination].transport.write("opponentMove:"+moveID)
+			# TODO catch key error exception
+			
 		
 	def printUsers(self):
 		print "current list of users: "

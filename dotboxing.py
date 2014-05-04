@@ -78,27 +78,27 @@ class GameSpace:
 			Separator.On_Click()
 			
 	# actions to take when move data received
-	def opponentMove(self,id):
+	def opponentMove(self,_id):
 		
 		# skip if its my turn
-		if self.gs.turn == "Mine":
+		if self.turn == "Mine":
 			return
 			
 		# error check for improper turn handling
-		if self.gs.turn != "Other":
+		if self.turn != "Other":
 			print "Error: Improper turn handling"
-			self.gs.reactor.stop()
+			self.reactor.stop()
 			
 		# Find Separator
 		for Separator in self.board.separators:
-			if Separator.id == id:
+			if Separator.id == _id:
 			
 				# change separator color
-				self.color = self.gs.red
-				pygame.draw.polygon(self.image,self.color,self.pointlist)
+				Separator.color = self.red
+				pygame.draw.polygon(Separator.image,Separator.color,Separator.pointlist)
 			
 				# switch turn
-				self.gs.turn = "Mine"
+				self.turn = "Mine"
 				return
 			
 
