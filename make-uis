@@ -1,0 +1,4 @@
+#!/bin/bash
+# Main Window
+rm mainwindow*
+pyuic4 ui/mainwindow.ui -o mainwindow.py
