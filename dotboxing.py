@@ -42,6 +42,12 @@ class GameSpace:
 
 		# set up game objects
 		self.board = GameBoard(self)
+		self.MyScore = Score(self)
+		self.MyScore.text = "My score: "
+		self.MyScore.update()
+		self.OpponentScore = Score(self)
+		self.OpponentScore.text = "Opponent's Score: "
+		self.OpponentScore.update()
 		
 		# set up gamespace variable
 		self.turn = "Mine"
@@ -68,6 +74,7 @@ class GameSpace:
 		self.screen.blit(self.board,(0,0))
 		for Separator in self.board.separators:
 			self.screen.blit(Separator.image,Separator.rect)
+		self.screen.blit(self.MyScore.image,(5,5))
 		
 		# Flip the display
 		pygame.display.flip()
@@ -288,14 +295,38 @@ class Separator(pygame.sprite.Sprite):
 			# if square is complete, fill in the square with the appropriate color
 			if self.gs.turn == "Mine":
 				fill_color = self.gs.red
+				self.gs.OpponentScore.score += 1
+				self.gs.OpponentScore.update()
 			else:
 				fill_color = self.gs.blue
+				self.gs.MyScore.score += 1
+				self.gs.MyScore.update()
 				
 			square_width = self.gs.board.interval - self.gs.board.dot_radius*2
 			square = pygame.Rect(self.rect.x+3, self.rect.y-square_width+5,square_width-6,square_width-6)
 			pygame.draw.rect(self.gs.board,fill_color,square)
 			self.complete = True
 		
+class Score(pygame.font.Font):
+
+	def __init__(self,gs):
 		
+		# initial setup
+		pygame.font.Font.__init__(self,None,16)
+		self.gs = gs
+		
+		# initialize score and surface
+		self.score = 0
+		self.text = " "
+		self.full_text = self.text + str(self.score)
+		self.image = self.render(self.full_text,1,self.gs.black)
+	
+	# change the score
+	def update(self):
+		
+		self.full_text = self.text + str(self.score)
+		self.image = self.render(self.full_text,1,self.gs.black)
+	
+	
 
 
