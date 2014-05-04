@@ -41,12 +41,7 @@ class Client(Protocol):
 				users[self.username] = self
 				available.append(self.username)
 				# Notify everyone what happened
-				for user in users:
-					if user == self.username:
-						self.transport.write("idConfirmed")
-					else:
-						self.sendOnlineList(user)
-						self.sendAvailableList(user)
+				self.globalUserListUpdate()
 
 		elif dataArray[0] == "challenge":
 			print data
@@ -57,6 +52,19 @@ class Client(Protocol):
 				users[toChallenge].transport.write("challenge:" + self.username)
 			else:
 				self.transport.write("msg:" + "CHALLENGE FAILED. User \"" + toChallenge + "\" is either not available or doesn't exist.")
+
+		elif dataArray[0] == "confirmChallenge":
+			user1 = dataArray[1]
+			user2 = dataArray[2]
+			# Remove from available
+			if user1 in available: available.remove(user1)
+			if user2 in available: available.remove(user2)
+			users[user1].transport.write("opponent:" + user2 + ":1")
+			users[user2].transport.write("opponent:" + user1 + ":2")
+
+		elif dataArray[0] == "rejectChallenge":
+			# notify other user of rejection
+			users[dataArray[1]].transport.write("reject")
 
 		elif dataArray[0] == "getGame":
 			# LOOP UNTIL OPPENENTS ARE ASSIGNED
@@ -82,29 +90,24 @@ class Client(Protocol):
 			users[destination].transport.write("opponentMove:"+moveID)
 			# TODO catch key error exception
 
-		elif dataArray[0] == "viewAvailable":
-			self.sendAvailableList(self.username)
+		elif dataArray[0] == "chat":
+			message = "chat:" + self.username + " >> " + dataArray[1]
+			# send this message to all other users
+			for user in users:
+				users[user].transport.write(message)
 
-		elif dataArray[0] == "viewOnline":
-			self.sendOnlineList(self.username)
+		elif dataArray[0] == "refresh":
+			self.globalUserListUpdate()
 
-	def sendAvailableList(self,destination):
-		availableUsers = ''
-		added = 0
-		for user in available:
-			if user != destination:
-				availableUsers = availableUsers + user + ", "
-				added += 1
-		users[destination].transport.write("available:" + availableUsers)
-
-	def sendOnlineList(self,destination):
+	def globalUserListUpdate(self):
 		onlineUsers = ''
-		added = 0
+		availableUsers = ''
 		for user in users:
-			if user != destination:
-				onlineUsers = onlineUsers + user + ", "
-				added += 1
-		users[destination].transport.write("online:" + onlineUsers)
+			onlineUsers = onlineUsers + user + "+"
+		for user in available:
+			availableUsers = availableUsers + user + "+"
+		for user in users:
+			users[user].transport.write("users:" + onlineUsers + ":available:" + availableUsers)
 			
 	def printUsers(self):
 		print "current list of users: "
@@ -130,8 +133,8 @@ class Client(Protocol):
 		# delete from available if there
 		if self.username in available:
 			available.remove(self.username)
-		# TODO: Notify others that connection has been lost
-		# necessary for ending games.
+		# Notify others that connection has been lost
+		self.globalUserListUpdate()
 
 class ClientFactory(Factory):
 	def buildProtocol(self,addr):
