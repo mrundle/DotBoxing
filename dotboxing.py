@@ -62,7 +62,12 @@ class GameSpace:
 		# handle user input
 		for event in pygame.event.get():
 			if event.type == QUIT:
-				self.reactor.stop()
+				# TODO: We don't want reactor to stop, we just want:
+				# Use protocol to send WIN/LOSE signal (DECIDE ON HOW TO DO THIS)
+				# Close pygame
+				pygame.quit()
+				return "GameOver"
+				#self.reactor.stop()
 			elif event.type == MOUSEBUTTONUP:
 				#print "Mouse clicked!"
 				self.On_Click()

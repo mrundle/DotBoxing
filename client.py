@@ -48,6 +48,8 @@ class Server(Protocol,QObject):
 		# initialize queue
 		self.queue = DeferredQueue()
 		self.startQueuing()
+
+	def startGUI(self):
 		# Start the GUI
 		thread = threading.Thread(target = run_gui, args = (self,))
 		thread.daemon = True
@@ -90,6 +92,9 @@ class Server(Protocol,QObject):
 			self.username = self.identify("identify")		
 			msg = "id:" + self.username
 			self.transport.write(msg)
+			# START THE GUI!!!!!!
+			# TODO: Do this after ID is confirmed
+			self.startGUI() 
 
 		elif (data[0] == 'reidentify'):
 			# username already taken, try again
@@ -151,8 +156,8 @@ class Server(Protocol,QObject):
 		print "Game instance initialized."
 		reactor.gs.protocol = self
 		# start game loop
-		lc = LoopingCall(reactor.gs.loop)
-		lc.start(1/60)
+		self.lc = LoopingCall(self.runGameLoop)
+		self.lc.start(1/60)
 
 	
 
@@ -166,6 +171,12 @@ class Server(Protocol,QObject):
 
 	def startQueuing(self):
 		self.queue.get().addCallback(self.queueData)
+
+	def runGameLoop(self):
+		retValue = reactor.gs.loop()
+		if retValue == "GameOver":
+			self.lc.stop()
+		
 	
 ######################################################################
 #
