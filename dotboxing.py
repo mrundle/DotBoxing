@@ -5,6 +5,7 @@ import pygame
 import math
 import sys
 import os
+import time
 import getopt
 from socket import *
 from pygame.locals import *
@@ -16,6 +17,11 @@ class GameSpace:
 		# Initialize pygame
 		pygame.init()
 		pygame.mixer.init()
+
+		# set up gamespace variable
+		self.turn = "Mine"
+		self.quit_condition = "forfeit"
+		self.GameOver = False
 
 		# Initialize networking vars
 		self.reactor  = reactor
@@ -30,7 +36,7 @@ class GameSpace:
 		
 		
 		# visual parameters - set here for ease of adjusting game layout
-		self.dot_number = 5 # number of dots on one side of the square
+		self.dot_number = 2 # number of dots on one side of the square
 		self.player_color = self.blue # color of player seperators and won squares
 		self.opponent_color = self.red # color of opponent seperators and won squares
 		self.margin = 80 # margin between dots and edge of screen
@@ -57,11 +63,6 @@ class GameSpace:
 		self.OpponentScore.text = "Opponent's Score: "
 		self.OpponentScore.update()
 		
-		# set up gamespace variable
-		self.turn = "Mine"
-		self.quit_condition = "forfeit"
-		self.GameOver = False
-		
 		print "GameSpace initialized"
 
 	def loop(self):
@@ -69,16 +70,18 @@ class GameSpace:
 		# Code for one loop of the game logic
 		# Note: loop will be called by client.py, not in this file
 		
+		# check for win
+		self.CheckForWin()
+		
+		# do nothing if game is over
 		if self.GameOver == True:
 			return
 		
 		# handle user input
 		for event in pygame.event.get():
 			if event.type == QUIT:
-				# TODO: We don't want reactor to stop, we just want:
-				# Use protocol to send WIN/LOSE signal (DECIDE ON HOW TO DO THIS)
 				# Close pygame
-				self.Quit()
+				self._Quit()
 				return "GameOver"
 				#self.reactor.stop()
 			elif event.type == MOUSEBUTTONUP:
@@ -87,6 +90,10 @@ class GameSpace:
 
 		# update game objects
 		self.CompleteSquares()
+
+		# do nothing if game is over
+		if self.GameOver == True:
+			return
 
 		# blit game objects
 		self.screen.blit(self.board,(0,0))
@@ -98,22 +105,19 @@ class GameSpace:
 		# Flip the display
 		pygame.display.flip()
 		
-		# check for win
-		self.CheckForWin()
-		
 		
 	# calls game objects On_Click functions
 	def On_Click(self):
 		for Separator in self.board.separators:
 			Separator.On_Click()
 			self.CheckForWin()
+			
 	# actions to take when move data received
 	def opponentMove(self,_id):
 		
-		# don't do anything if the game is over
+		# ignore if game is over
 		if self.GameOver == True:
 			return
-		
 		
 		# skip if its my turn
 		if self.turn == "Mine":
@@ -122,10 +126,14 @@ class GameSpace:
 		# error check for improper turn handling
 		if self.turn != "Other":
 			print "Error: Improper turn handling"
-			self.Quit()
+			self._Quit()
 			
 		# Find Separator
 		Separator = self.board.FindSeparator(_id)
+			
+		# if no separator found, ignore
+		if Separator == None:
+			return
 			
 		# change separator color
 		Separator.color = self.opponent_color
@@ -143,12 +151,16 @@ class GameSpace:
 		# print "Complete Square function called"
 		
 		for Separator in self.board.separators:
-			Separator.CompleteSquare()self.GameOver = True
+			Separator.CompleteSquare()
 
-			
-	# close the gamespace
-	def Quit(self):
 	
+	# close the gamespace
+	def _Quit(self):
+	
+		# ignore if has already quit
+		if self.GameOver == True:
+			return
+			
 		self.GameOver = True
 		
 		# temporarily default to forfeit
@@ -162,6 +174,11 @@ class GameSpace:
 			
 	# close the gamespace without a protocol message
 	def quietQuit(self):
+	
+		# ignore if has already quit
+		if self.GameOver == True:
+			return
+
 		self.GameOver = True
 		pygame.quit()
 		
@@ -178,15 +195,15 @@ class GameSpace:
 		if self.MyScore.score > self.OpponentScore.score:
 			# I win!
 			self.quit_condition = "win"
-			self.Quit()
+			self._Quit()
 		elif self.MyScore.score < self.OpponentScore.score:
 			# I lose!
 			self.quit_condition = "lost"
-			self.Quit()
+			self._Quit()
 		else:
 			# I tied!
 			self.quit_condition = "tie"
-			self.Quit()
+			self._Quit()
 		
 
 # The screen when the game is being played (as opposed to the lobby)
@@ -320,7 +337,7 @@ class Separator(pygame.sprite.Sprite):
 		# error check for improper turn handling
 		if self.gs.turn != "Mine":
 			print "Error: Improper turn handling"
-			self.gs.Quit()
+			self.gs._Quit()
 			
 		# skip if clicked already
 		if self.clicked == True:
@@ -340,6 +357,7 @@ class Separator(pygame.sprite.Sprite):
 			self.clicked = True
 			self.gs.turn = "Other"
 			self.gs.protocol.sendMove(self.id)
+			time.sleep(.1)
 			
 		
 	# check to see if square is completed, takes action if so
@@ -367,15 +385,18 @@ class Separator(pygame.sprite.Sprite):
 				fill_color = self.gs.opponent_color
 				self.gs.OpponentScore.score += 1
 				self.gs.OpponentScore.update()
+				self.gs.turn = "Other" # Opponent gets another turn
 			else:
 				fill_color = self.gs.player_color
 				self.gs.MyScore.score += 1
 				self.gs.MyScore.update()
+				self.gs.turn = "Mine" # I get another turn
 				
 			square_width = self.gs.board.interval - self.gs.board.dot_radius*2
 			square = pygame.Rect(self.rect.x+3, self.rect.y-square_width+5,square_width-6,square_width-6)
 			pygame.draw.rect(self.gs.board,fill_color,square)
 			self.complete = True
+	
 		
 class Score(pygame.font.Font):
 
@@ -393,6 +414,10 @@ class Score(pygame.font.Font):
 	
 	# change the score
 	def update(self):
+		
+		# ignore if game is over
+		if self.gs.GameOver == True:
+			return
 		
 		self.full_text = self.text + str(self.score)
 		self.image = self.render(self.full_text,1,self.gs.black)

@@ -14,6 +14,7 @@ from twisted.internet.defer import DeferredQueue
 # import system stuff
 import os, sys
 import threading
+import time
 
 # import gui
 from gui import guiQT
@@ -184,7 +185,7 @@ class Server(Protocol,QObject):
 		elif msg == "tied":
 			self.chatSignal.emit("You tied " + self.challenger + ".")
 		# tell the server that you're available
-		self.transport.write("available:" + self.username)
+		self.transport.write("available:" + self.username + ":")
 
 	def guiExit(self):
 		quitting = True
