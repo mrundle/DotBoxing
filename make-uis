@@ -1,4 +1,11 @@
 #!/bin/bash
 # Main Window
-rm mainwindow*
+rm -f mainwindow*
 pyuic4 ui/mainwindow.ui -o mainwindow.py
+
+# Username input
+rm -f username*
+pyuic4 ui/username.ui -o username.py
+
+rm -f challenge*
+pyuic4 ui/challenge.ui -o challenge.py

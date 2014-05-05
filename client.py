@@ -15,14 +15,17 @@ from twisted.internet.defer import DeferredQueue
 import os, sys
 import threading
 
-# import pyQt
+# import gui
+from gui import guiQT
+
+# import QtCore for Qt objects and signals
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from mainwindow import Ui_MainWindow
 
 SERVER_HOST = 'localhost'   # (global) should be whatever host server.py is running on
 SERVER_PORT = 40035        # (global) should match the server.py file
 
+quitting = False           # to prevent notifying the user of disconnection when they exit
 ######################################################################
 #
 #	SERVER PROTOCOL CLASS
@@ -36,6 +39,8 @@ class Server(Protocol,QObject):
 	chatSignal       = pyqtSignal(QString)
 	userUpdateSignal = pyqtSignal(QString)
 	challengeSignal  = pyqtSignal(QString)
+	#identifySignal   = pyqtSignal() # deprecated
+	reidentifySignal = pyqtSignal()
 	
 	def __init__(self):
 		# initialize vars
@@ -48,15 +53,17 @@ class Server(Protocol,QObject):
 		# initialize queue
 		self.queue = DeferredQueue()
 		self.startQueuing()
+		
+	def connectionMade(self):
+		print "Connected to server."
+		# Start the GUI
+		self.startGUI()
 
 	def startGUI(self):
 		# Start the GUI
 		thread = threading.Thread(target = run_gui, args = (self,))
 		thread.daemon = True
 		thread.start()
-
-	def connectionMade(self):
-		print "Connected to server."
 
 	def handleData(self, msg):
 		#### DEBUG ####
@@ -87,20 +94,9 @@ class Server(Protocol,QObject):
 			self.inGame = False
 			self.chatSignal.emit("Game rejected")
 
-		if (data[0] == 'identify'):
-			# identify to server
-			self.username = self.identify("identify")		
-			msg = "id:" + self.username
-			self.transport.write(msg)
-			# START THE GUI!!!!!!
-			# TODO: Do this after ID is confirmed
-			self.startGUI() 
-
 		elif (data[0] == 'reidentify'):
-			# username already taken, try again
-			self.username = self.identify("reidentify")
-			msg = "id:" + self.username
-			self.transport.write(msg)
+			# Handled in GUI
+			self.reidentifySignal.emit()
 
 		elif (data[0] == 'challenge'):
 			# the user has received a challenge
@@ -137,16 +133,6 @@ class Server(Protocol,QObject):
 		# send move to the opponent
 		self.transport.write("move:" + self.opponent + ":" + moveID)
 
-	def identify(self, msg):
-		# identify to server (pick username)
-		msg = msg.rstrip()
-		if msg == "identify":
-			# initial prompt
-			return raw_input("Enter a username: ")
-		elif msg == "reidentify":
-			# username already taken
-			return raw_input("Name already taken. Enter a username: ")
-
 	# Game should only be initialized after 
 	# opponents have been assigned and match has been made
 	def initializeGame(self):
@@ -175,117 +161,38 @@ class Server(Protocol,QObject):
 	def runGameLoop(self):
 		retValue = reactor.gs.loop()
 		if retValue == "GameOver":
+			reactor.gs.pygame.quit()
 			self.lc.stop()
-		
-	
-######################################################################
-#
-#	PyQT GUI
-#	------------------------------------------------------------------
-#
-######################################################################
-class guiQT(QMainWindow, Ui_MainWindow):
-	def __init__(self,protocol,parent=None):
-		self.protocol = protocol
-		super(guiQT, self).__init__()
-		self.setWindowTitle("DotBoxing")
-		QMainWindow.__init__(self,parent)
-		self.setupUi(self)
 
-		# initially hide the challenge stuff
-		self.challengeText.hide()
-		self.yesButton.hide()
-		self.noButton.hide()
-
-		# CONNECTIONS
-		# Connect signals from protocol
-		self.protocol.chatSignal.connect(self.addToChat) # connects to "label"
-		self.protocol.userUpdateSignal.connect(self.updateUserLists)
-		self.protocol.challengeSignal.connect(self.receiveChallenge)
-		# Connect button clicks
-		self.challengeButton.clicked.connect(self.challengeUser)
-		self.chatEdit.returnPressed.connect(self.sendChatMessage)
-		self.yesButton.clicked.connect(self.acceptChallenge)
-		self.noButton.clicked.connect(self.rejectChallenge)
-
-	# Update the online and available lists
-	def updateUserLists(self,inputString):
-		data = str(inputString).split(':')
-		online = data[0].rstrip('+').split('+')
-		available = data[1].rstrip('+').split('+')
-		# populate the online user list
-		self.onlineList.clear()
-		for user in online:
-			self.onlineList.addItem(user)
-		# populate the available user list
-		self.availableList.clear()
-		for user in available:
-			self.availableList.addItem(user)
-
-	def challengeUser(self):
-		if self.protocol.inGame == False:
-			userToChallenge = str(self.availableList.currentItem().text())
-			if userToChallenge == self.protocol.username:
-				self.chatList.addItem("You cannot challenge yourself!")
-				return
-			else:
-				self.chatList.addItem("Challenging " + userToChallenge)
-				self.protocol.inGame = True
-				self.protocol.transport.write("challenge:" + userToChallenge)
-		else:
-			self.chatList.addItem("Already either in a game or waiting for a game.")
-
-	def sendChatMessage(self):
-		toSend = str(self.chatEdit.text()).lstrip().rstrip()
-		self.chatEdit.clear()
-		self.protocol.transport.write("chat:" + toSend)
-
-	def addToChat(self,msg):
-		self.chatList.addItem(msg)
-		self.chatList.scrollToBottom()
-
-	def receiveChallenge(self,user):
-		self.challengeText.setText("Accept challenge from " + user + "?")
-		self.challengeText.show()
-		self.yesButton.show()
-		self.noButton.show()
-
-	def acceptChallenge(self):
-		self.challengeText.hide()
-		self.yesButton.hide()
-		self.noButton.hide()
-		self.protocol.transport.write("confirmChallenge:" + self.protocol.username + ":" + self.protocol.challenger)
-
-	def rejectChallenge(self):
-		self.protocol.transport.write("rejectChallenge:" + self.protocol.challenger)
-		self.challengeText.hide()
-		self.yesButton.hide()
-		self.noButton.hide()
-
-
+	def guiExit(self):
+		quitting = True
+		self.transport.loseConnection()
+		reactor.stop()
+		return
 
 def run_gui(protocol=None):
 	app = QApplication(sys.argv)
 	_gui = guiQT(protocol,None)
 	_gui.show()
 	app.exec_()
-	return
+	protocol.guiExit()
 
 class ServerClientFactory(ReconnectingClientFactory):
 	def buildProtocol(self,addr):
 		return Server()
 	def clientConnectionLost(self,connector, reason):
-		print "Lost connection to server. Attempting to reconnect..."
-		ReconnectingClientFactory.clientConnectionLost(self,connector, reason)
+		if quitting == False:
+			print "Lost connection to server. Attempting to reconnect..."
+			ReconnectingClientFactory.clientConnectionLost(self,connector, reason)
+		else:
+			print "Goodbye."
 	def clientConnectionFailed(self,connector,reason):
 		print "Cannot connect to server. Attempting to reconnect..."
 		ReconnectingClientFactory.clientConnectionLost(self,connector, reason)
 
 def main():
-
 	# connect to server
 	reactor.connectTCP(SERVER_HOST, SERVER_PORT, ServerClientFactory())
-	
 	reactor.run()
 
 if __name__ == "__main__":

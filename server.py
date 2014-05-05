@@ -19,8 +19,7 @@ class Client(Protocol):
 		self.username = ''
 
 	def connectionMade(self):
-		print "connected to client"
-		self.transport.write("identify")
+		print "connected to new client"
 
 	def dataReceived(self,data):
 		print "received data = " + data
