@@ -80,6 +80,8 @@ class Server(Protocol,QObject):
 			self.opponent = data[1]
 			print "Matched to opponent: " + self.opponent
 			print "Initializing game between " + self.username + " and " + self.opponent
+			# update available list to all users
+			self.transport.write("refresh:null")
 			self.initializeGame()
 			# tell the game who's turn it is
 			turn = data[2]
@@ -115,7 +117,9 @@ class Server(Protocol,QObject):
 		elif (data[0] == 'forfeit'):
 			self.chatSignal.emit("SERVER MESSAGE: " + self.challenger + " forfeited.")
 			self.inGame = False
-			self.reactor.gs.quietQuit()
+			self.lc.stop()
+			reactor.gs.quietQuit()
+			self.transport.write("refresh:null")
 
 		elif (data[0] == 'users' and data[2] == 'available'):
 			userList = data[1]
@@ -150,8 +154,6 @@ class Server(Protocol,QObject):
 		self.lc = LoopingCall(reactor.gs.loop)
 		self.lc.start(1/60)
 
-	
-
 	def dataReceived(self, data):
 		self.queue.put(data)
 
@@ -171,11 +173,17 @@ class Server(Protocol,QObject):
 			# need to notify other person that the game has ended
 			self.transport.write("forfeit:" + self.challenger)
 			self.chatSignal.emit("You forfeited the game against " + self.challenger + ".")
+			# return so we don't transport another message to server
+			return
 		elif msg == "won":
 			# move has already been sent to other person
 			self.chatSignal.emit("You won against " + self.challenger + "!")
 		elif msg == "lost":
 			self.chatSignal.emit("You lost against " + self.challenger + ".")
+		elif msg == "tied":
+			self.chatSignal.emit("You tied " + self.challenger + ".")
+		# tell the server that you're available
+		self.transport.write("available:" + self.username)
 
 	def guiExit(self):
 		quitting = True

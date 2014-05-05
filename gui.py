@@ -101,14 +101,12 @@ class guiQT(QMainWindow, Ui_MainWindow):
 			self.challengeBox.show()
 
 	def acceptChallenge(self):
-		#TODO LINK TO THIS
 		self.challengeBox.hide()
 		self.protocol.transport.write("confirmChallenge:" + self.protocol.username + ":" + self.protocol.challenger)
 
 	def rejectChallenge(self):
 		self.challengeBox.hide()
 		self.protocol.transport.write("rejectChallenge:" + self.protocol.challenger)
-		#TODO LINK TO THIS
 
 	def sendUsername(self):
 		self.idBox.hide()

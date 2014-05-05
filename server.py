@@ -91,7 +91,13 @@ class Client(Protocol):
 
 		elif dataArray[0] == "forfeit":
 			toNotify = dataArray[1]
+			available.append(toNotify)
+			available.append(self.username)
 			users[toNotify].transport.write("forfeit:" + toNotify)
+
+		elif dataArray[0] == "available":
+			available.append(dataArray[1])
+			self.globalUserListUpdate(self)
 
 		elif dataArray[0] == "chat":
 			message = "chat:" + self.username + " >> " + dataArray[1]
