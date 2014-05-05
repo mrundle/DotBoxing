@@ -50,14 +50,17 @@ class guiQT(QMainWindow, Ui_MainWindow):
 		data = str(inputString).split(':')
 		online = data[0].rstrip('+').split('+')
 		available = data[1].rstrip('+').split('+')
-		# populate the online user list
+		# clear!
 		self.onlineList.clear()
-		for user in online:
-			self.onlineList.addItem(user)
-		# populate the available user list
 		self.availableList.clear()
-		for user in available:
-			self.availableList.addItem(user)
+		# populate the online user list
+		if data[0] != '':
+			for user in online:
+				self.onlineList.addItem(user)
+		# populate the available user list
+		if data[1] != '':
+			for user in available:
+				self.availableList.addItem(user)
 
 	def challengeUser(self):
 		if self.protocol.inGame == False:

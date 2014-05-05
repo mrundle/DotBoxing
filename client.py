@@ -78,6 +78,7 @@ class Server(Protocol,QObject):
 			# argument indicates the order of turn
 			self.inGame = True
 			self.opponent = data[1]
+			self.challenger = data[1]
 			print "Matched to opponent: " + self.opponent
 			print "Initializing game between " + self.username + " and " + self.opponent
 			# update available list to all users
