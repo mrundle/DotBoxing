@@ -69,17 +69,19 @@ class GameSpace:
 				return "GameOver"
 				#self.reactor.stop()
 			elif event.type == MOUSEBUTTONUP:
-				#print "Mouse clicked!"
+				#print "Mouse clicked!" 
 				self.On_Click()
 
 		# update game objects
 		self.CompleteSquares()
+		self.CheckForWin()
 
 		# blit game objects
 		self.screen.blit(self.board,(0,0))
 		for Separator in self.board.separators:
 			self.screen.blit(Separator.image,Separator.rect)
 		self.screen.blit(self.MyScore.image,(5,5))
+		self.screen.blit(self.OpponentScore.image,(5,10))
 		
 		# Flip the display
 		pygame.display.flip()
@@ -123,10 +125,33 @@ class GameSpace:
 		for Separator in self.board.separators:
 			Separator.CompleteSquare()
 			
+			
 	# close the gamespace
 	def Quit(self):
-		pygame.quit()	
+		# temporarily default to forfeit
+		if self.protocol == None:
+			print "Error: no protocol supplied to gamestate."
+			pygame.quit()
+		else:
+			self.protocol.gameEnded("forfeit")
+			pygame.quit()	
 			
+			
+	# close the gamespace without a protocol message
+	def quietQuit(self):
+		pygame.quit()
+		
+		
+	# check for the end of the game
+	def CheckForWin(self):
+	
+		# check to see if all Separators have been clicked
+		for Separator in self.board.separators:
+			if Separator.clicked == False:
+				return
+		
+		# if so, determine winner
+		return
 
 # The screen when the game is being played (as opposed to the lobby)
 class GameBoard(pygame.Surface):
