@@ -188,6 +188,7 @@ class Server(Protocol,QObject):
 		#self.lc.stop()
 		self.inGame = False
 		msg = msg.rstrip()
+		print "GAME_ENDED_CALLED with msg = " + msg
 		if msg == "forfeit":
 			# need to notify other person that the game has ended
 			self.transport.write("forfeit:" + self.challenger)

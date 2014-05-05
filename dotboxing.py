@@ -36,14 +36,14 @@ class GameSpace:
 		
 		
 		# visual parameters - set here for ease of adjusting game layout
-		self.dot_number = 2 # number of dots on one side of the square
+		self.dot_number = 3 # number of dots on one side of the square
 		self.player_color = self.blue # color of player seperators and won squares
 		self.opponent_color = self.red # color of opponent seperators and won squares
 		self.margin = 80 # margin between dots and edge of screen
 		
 
 		# Set up the screen
-		self.size   =  self.width, self.height = 640, 480
+		self.size   =  self.width, self.height = 640, 640
 		self.screen =  pygame.display.set_mode(self.size)
 		self.screen.fill(self.black)
 		pygame.display.set_caption("DotBoxing")
@@ -195,7 +195,7 @@ class GameSpace:
 		# if so, determine winner
 		if self.MyScore.score > self.OpponentScore.score:
 			# I win!
-			self.quit_condition = "win"
+			self.quit_condition = "won"
 			self._Quit()
 		elif self.MyScore.score < self.OpponentScore.score:
 			# I lose!
@@ -203,7 +203,7 @@ class GameSpace:
 			self._Quit()
 		else:
 			# I tied!
-			self.quit_condition = "tie"
+			self.quit_condition = "tied"
 			self._Quit()
 		
 

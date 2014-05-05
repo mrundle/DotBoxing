@@ -109,7 +109,8 @@ class Client(Protocol):
 
 		elif dataArray[0] == "available":
 			available.append(dataArray[1])
-			self.globalUserListUpdate(self)
+			available.append(dataArray[2])
+			self.globalUserListUpdate()
 
 		elif dataArray[0] == "chat":
 			message = "chat:" + self.username + " >> " + dataArray[1]
