@@ -108,7 +108,6 @@ class GameSpace:
 	def On_Click(self):
 		for Separator in self.board.separators:
 			Separator.On_Click()
-			self.CheckForWin()
 			
 	# actions to take when move data received
 	def opponentMove(self,_id):
@@ -192,6 +191,7 @@ class GameSpace:
 			if Separator.clicked == False:
 				return
 		
+		print "WIN_COND_TRIGGERED"
 		# if so, determine winner
 		if self.MyScore.score > self.OpponentScore.score:
 			# I win!
