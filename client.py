@@ -22,7 +22,7 @@ from gui import guiQT
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-SERVER_HOST = 'localhost'   # (global) should be whatever host server.py is running on
+SERVER_HOST = 'student01.cse.nd.edu'   # (global) should be whatever host server.py is running on
 SERVER_PORT = 40035        # (global) should match the server.py file
 
 quitting = False           # to prevent notifying the user of disconnection when they exit
@@ -161,7 +161,7 @@ class Server(Protocol,QObject):
 	def runGameLoop(self):
 		retValue = reactor.gs.loop()
 		if retValue == "GameOver":
-			reactor.gs.pygame.quit()
+			reactor.gs.Quit()
 			self.lc.stop()
 
 	def guiExit(self):

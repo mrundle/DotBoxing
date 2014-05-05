@@ -65,7 +65,7 @@ class GameSpace:
 				# TODO: We don't want reactor to stop, we just want:
 				# Use protocol to send WIN/LOSE signal (DECIDE ON HOW TO DO THIS)
 				# Close pygame
-				pygame.quit()
+				self.Quit()
 				return "GameOver"
 				#self.reactor.stop()
 			elif event.type == MOUSEBUTTONUP:
@@ -100,7 +100,7 @@ class GameSpace:
 		# error check for improper turn handling
 		if self.turn != "Other":
 			print "Error: Improper turn handling"
-			self.reactor.stop()
+			self.Quit()
 			
 		# Find Separator
 		Separator = self.board.FindSeparator(_id)
@@ -122,6 +122,10 @@ class GameSpace:
 		
 		for Separator in self.board.separators:
 			Separator.CompleteSquare()
+			
+	# close the gamespace
+	def Quit(self):
+		pygame.quit()	
 			
 
 # The screen when the game is being played (as opposed to the lobby)
@@ -255,7 +259,7 @@ class Separator(pygame.sprite.Sprite):
 		# error check for improper turn handling
 		if self.gs.turn != "Mine":
 			print "Error: Improper turn handling"
-			self.gs.reactor.stop()
+			self.gs.Quit()
 			
 		# skip if clicked already
 		if self.clicked == True:
