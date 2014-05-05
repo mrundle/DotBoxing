@@ -60,6 +60,7 @@ class GameSpace:
 		# set up gamespace variable
 		self.turn = "Mine"
 		self.quit_condition = "forfeit"
+		self.GameOver = False
 		
 		print "GameSpace initialized"
 
@@ -67,6 +68,9 @@ class GameSpace:
 
 		# Code for one loop of the game logic
 		# Note: loop will be called by client.py, not in this file
+		
+		if self.GameOver == True:
+			return
 		
 		# handle user input
 		for event in pygame.event.get():
@@ -83,7 +87,6 @@ class GameSpace:
 
 		# update game objects
 		self.CompleteSquares()
-		self.CheckForWin()
 
 		# blit game objects
 		self.screen.blit(self.board,(0,0))
@@ -95,12 +98,15 @@ class GameSpace:
 		# Flip the display
 		pygame.display.flip()
 		
+		# check for win
+		self.CheckForWin()
+		
 		
 	# calls game objects On_Click functions
 	def On_Click(self):
 		for Separator in self.board.separators:
 			Separator.On_Click()
-			
+			self.CheckForWin()
 	# actions to take when move data received
 	def opponentMove(self,_id):
 		
@@ -137,6 +143,9 @@ class GameSpace:
 			
 	# close the gamespace
 	def Quit(self):
+	
+		self.GameOver = True
+		
 		# temporarily default to forfeit
 		if self.protocol == None:
 			print "Error: no protocol supplied to gamestate."
@@ -148,6 +157,7 @@ class GameSpace:
 			
 	# close the gamespace without a protocol message
 	def quietQuit(self):
+		self.GameOver = True
 		pygame.quit()
 		
 		
