@@ -46,6 +46,7 @@ class GameSpace:
 		self.size   =  self.width, self.height = 640, 480
 		self.screen =  pygame.display.set_mode(self.size)
 		self.screen.fill(self.black)
+		pygame.display.set_caption("DotBoxing")
 
 		# set up button click values
 		self.upButton    = False
@@ -69,9 +70,6 @@ class GameSpace:
 
 		# Code for one loop of the game logic
 		# Note: loop will be called by client.py, not in this file
-		
-		# check for win
-		self.CheckForWin()
 		
 		# do nothing if game is over
 		if self.GameOver == True:
@@ -100,7 +98,7 @@ class GameSpace:
 		for Separator in self.board.separators:
 			self.screen.blit(Separator.image,Separator.rect)
 		self.screen.blit(self.MyScore.image,(5,5))
-		self.screen.blit(self.OpponentScore.image,(5,15))
+		self.screen.blit(self.OpponentScore.image,(5,20))
 		
 		# Flip the display
 		pygame.display.flip()
@@ -142,7 +140,10 @@ class GameSpace:
 		# switch turn
 		self.turn = "Mine"
 		Separator.clicked = True
-		return
+		
+		# check for win
+		self.CheckForWin()
+		
 		
 		
 	# check for completed squares, mark accordingly
@@ -357,7 +358,6 @@ class Separator(pygame.sprite.Sprite):
 			self.clicked = True
 			self.gs.turn = "Other"
 			self.gs.protocol.sendMove(self.id)
-			time.sleep(.1)
 			
 		
 	# check to see if square is completed, takes action if so
@@ -403,7 +403,7 @@ class Score(pygame.font.Font):
 	def __init__(self,gs):
 		
 		# initial setup
-		pygame.font.Font.__init__(self,None,16)
+		pygame.font.Font.__init__(self,None,22)
 		self.gs = gs
 		
 		# initialize score and surface
