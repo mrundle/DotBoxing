@@ -139,6 +139,7 @@ class GameSpace:
 		# switch turn
 		self.turn = "Mine"
 		Separator.clicked = True
+		self.lastclick = "Opponent"
 		
 		# check for win
 		self.CheckForWin()
@@ -356,6 +357,7 @@ class Separator(pygame.sprite.Sprite):
 			
 			# switch turn and indicate clicked
 			self.clicked = True
+			self.gs.lastclick = "Me"
 			self.gs.turn = "Other"
 			self.gs.protocol.sendMove(self.id)
 			
@@ -381,16 +383,19 @@ class Separator(pygame.sprite.Sprite):
 		if self.left_neighbor.clicked==self.right_neighbor.clicked==self.far_neighbor.clicked==self.clicked==True:
 			
 			# if square is complete, fill in the square with the appropriate color
-			if self.gs.turn == "Mine":
+			if self.gs.lastclick == "Opponent":
 				fill_color = self.gs.opponent_color
 				self.gs.OpponentScore.score += 1
 				self.gs.OpponentScore.update()
 				self.gs.turn = "Other" # Opponent gets another turn
-			else:
+			elif self.gs.lastclick == "Me":
 				fill_color = self.gs.player_color
 				self.gs.MyScore.score += 1
 				self.gs.MyScore.update()
 				self.gs.turn = "Mine" # I get another turn
+			else:
+				print "Error: Improper last click mechanism"
+				self.gs.quietQuit()
 				
 			square_width = self.gs.board.interval - self.gs.board.dot_radius*2
 			square = pygame.Rect(self.rect.x+3, self.rect.y-square_width+5,square_width-6,square_width-6)

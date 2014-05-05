@@ -103,9 +103,10 @@ class Server(Protocol,QObject):
 
 		elif (data[0] == 'challenge'):
 			# the user has received a challenge
-			self.challenger = data[1]
-			self.chatSignal.emit("SERVER MESSAGE: You have received a challenge from " + data[1])
-			self.challengeSignal.emit(data[1])
+			if self.inGame == False:
+				self.challenger = data[1]
+				self.chatSignal.emit("SERVER MESSAGE: You have received a challenge from " + data[1])
+				self.challengeSignal.emit(data[1])
 
 		elif (data[0] == 'idConfirmed'):
 			msg = "SERVER MESSAGE: Username \"" + self.username + "\" confirmed."
@@ -124,18 +125,21 @@ class Server(Protocol,QObject):
 
 		elif (data[0] == 'winner'):
 			self.chatSignal.emit("You won against " + self.challenger + "!")
+			self.inGame = False
 			# tell the server that you're available
 			self.transport.write("available:" + self.username + ":" + self.challenger)
 			reactor.gs.quietQuit()
 
 		elif (data[0] == 'loser'):
 			self.chatSignal.emit("You lost against " + self.challenger + ".")
+			self.inGame = False
 			# tell the server that you're available
 			self.transport.write("available:" + self.username + ":" + self.challenger)
 			reactor.gs.quietQuit()
 
 		elif (data[0] == 'tied'):
 			self.chatSignal.emit("You tied " + self.challenger + ".")
+			self.inGame = False
 			# tell the server that you're available
 			self.transport.write("available:" + self.username + ":" + self.challenger)
 			reactor.gs.quietQuit()
