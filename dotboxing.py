@@ -110,6 +110,11 @@ class GameSpace:
 	# actions to take when move data received
 	def opponentMove(self,_id):
 		
+		# don't do anything if the game is over
+		if self.GameOver == True:
+			return
+		
+		
 		# skip if its my turn
 		if self.turn == "Mine":
 			return
@@ -138,7 +143,7 @@ class GameSpace:
 		# print "Complete Square function called"
 		
 		for Separator in self.board.separators:
-			Separator.CompleteSquare()
+			Separator.CompleteSquare()self.GameOver = True
 
 			
 	# close the gamespace

@@ -118,7 +118,7 @@ class Server(Protocol,QObject):
 		elif (data[0] == 'forfeit'):
 			self.chatSignal.emit("SERVER MESSAGE: " + self.challenger + " forfeited.")
 			self.inGame = False
-			self.lc.stop()
+			#self.lc.stop()
 			reactor.gs.quietQuit()
 			self.transport.write("refresh:null")
 
@@ -167,7 +167,7 @@ class Server(Protocol,QObject):
 		self.queue.get().addCallback(self.queueData)
 
 	def gameEnded(self,msg):
-		self.lc.stop()
+		#self.lc.stop()
 		self.inGame = False
 		msg = msg.rstrip()
 		if msg == "forfeit":
