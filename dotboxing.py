@@ -20,13 +20,21 @@ class GameSpace:
 		# Initialize networking vars
 		self.reactor  = reactor
 		self.protocol = None
-
+		
 		# colors
 		self.black  =   0, 0, 0
 		self.white  = 255, 255, 255
 		self.grey   = 200, 200, 200
 		self.blue   =   0,   0,204
 		self.red = 255,0,0
+		
+		
+		# visual parameters - set here for ease of adjusting game layout
+		self.dot_number = 5 # number of dots on one side of the square
+		self.player_color = self.blue # color of player seperators and won squares
+		self.opponent_color = self.red # color of opponent seperators and won squares
+		self.margin = 80 # margin between dots and edge of screen
+		
 
 		# Set up the screen
 		self.size   =  self.width, self.height = 640, 480
@@ -51,6 +59,7 @@ class GameSpace:
 		
 		# set up gamespace variable
 		self.turn = "Mine"
+		self.quit_condition = "forfeit"
 		
 		print "GameSpace initialized"
 
@@ -81,7 +90,7 @@ class GameSpace:
 		for Separator in self.board.separators:
 			self.screen.blit(Separator.image,Separator.rect)
 		self.screen.blit(self.MyScore.image,(5,5))
-		self.screen.blit(self.OpponentScore.image,(5,10))
+		self.screen.blit(self.OpponentScore.image,(5,15))
 		
 		# Flip the display
 		pygame.display.flip()
@@ -108,7 +117,7 @@ class GameSpace:
 		Separator = self.board.FindSeparator(_id)
 			
 		# change separator color
-		Separator.color = self.red
+		Separator.color = self.opponent_color
 		pygame.draw.polygon(Separator.image,Separator.color,Separator.pointlist)
 			
 		# switch turn
@@ -133,7 +142,7 @@ class GameSpace:
 			print "Error: no protocol supplied to gamestate."
 			pygame.quit()
 		else:
-			self.protocol.gameEnded("forfeit")
+			self.protocol.gameEnded(self.quit_condition)
 			pygame.quit()	
 			
 			
@@ -151,7 +160,19 @@ class GameSpace:
 				return
 		
 		# if so, determine winner
-		return
+		if self.MyScore.score > self.OpponentScore.score:
+			# I win!
+			self.quit_condition = "win"
+			self.Quit()
+		elif self.MyScore.score < self.OpponentScore.score:
+			# I lose!
+			self.quit_condition = "lost"
+			self.Quit()
+		else:
+			# I tied!
+			self.quit_condition = "tie"
+			self.Quit()
+		
 
 # The screen when the game is being played (as opposed to the lobby)
 class GameBoard(pygame.Surface):
@@ -164,8 +185,8 @@ class GameBoard(pygame.Surface):
 		self.fill(self.gs.white)
 		self.separators = pygame.sprite.Group()
 		
-		self.dot_x = 10 # number of dots on one side of the square
-		self.margin = 80
+		self.dot_x = self.gs.dot_number # number of dots on one side of the square
+		self.margin = self.gs.margin
 		self.x = self.margin
 		self.y = self.margin
 		self.width = self.gs.width-self.margin
@@ -297,7 +318,7 @@ class Separator(pygame.sprite.Sprite):
 		if self.rect.collidepoint(mx,my) == True:
 		
 			# change separator color
-			self.color = self.gs.blue
+			self.color = self.gs.player_color
 			pygame.draw.polygon(self.image,self.color,self.pointlist)
 			
 			# switch turn and indicate clicked
@@ -328,11 +349,11 @@ class Separator(pygame.sprite.Sprite):
 			
 			# if square is complete, fill in the square with the appropriate color
 			if self.gs.turn == "Mine":
-				fill_color = self.gs.red
+				fill_color = self.gs.opponent_color
 				self.gs.OpponentScore.score += 1
 				self.gs.OpponentScore.update()
 			else:
-				fill_color = self.gs.blue
+				fill_color = self.gs.player_color
 				self.gs.MyScore.score += 1
 				self.gs.MyScore.update()
 				
