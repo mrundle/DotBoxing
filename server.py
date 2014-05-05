@@ -89,6 +89,10 @@ class Client(Protocol):
 			users[destination].transport.write("opponentMove:"+moveID)
 			# TODO catch key error exception
 
+		elif dataArray[0] == "forfeit":
+			toNotify = dataArray[0]
+			users[toNotify].transport.write("forfeit:" + toNotify)
+
 		elif dataArray[0] == "chat":
 			message = "chat:" + self.username + " >> " + dataArray[1]
 			# send this message to all other users
