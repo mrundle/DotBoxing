@@ -125,19 +125,19 @@ class Server(Protocol,QObject):
 		elif (data[0] == 'winner'):
 			self.chatSignal.emit("You won against " + self.challenger + "!")
 			# tell the server that you're available
-			self.transport.write("available:" + self.username + ":" self.challenger)
+			self.transport.write("available:" + self.username + ":" + self.challenger)
 			reactor.gs.quietQuit()
 
 		elif (data[0] == 'loser'):
 			self.chatSignal.emit("You lost against " + self.challenger + ".")
 			# tell the server that you're available
-			self.transport.write("available:" + self.username + ":" self.challenger)
+			self.transport.write("available:" + self.username + ":" + self.challenger)
 			reactor.gs.quietQuit()
 
 		elif (data[0] == 'tied'):
 			self.chatSignal.emit("You tied " + self.challenger + ".")
 			# tell the server that you're available
-			self.transport.write("available:" + self.username + ":" self.challenger)
+			self.transport.write("available:" + self.username + ":" + self.challenger)
 			reactor.gs.quietQuit()
 
 		elif (data[0] == 'users' and data[2] == 'available'):
