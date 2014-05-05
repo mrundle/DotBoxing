@@ -90,7 +90,7 @@ class Client(Protocol):
 			# TODO catch key error exception
 
 		elif dataArray[0] == "forfeit":
-			toNotify = dataArray[0]
+			toNotify = dataArray[1]
 			users[toNotify].transport.write("forfeit:" + toNotify)
 
 		elif dataArray[0] == "chat":
