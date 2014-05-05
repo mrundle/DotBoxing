@@ -124,8 +124,7 @@ class GameSpace:
 		
 		for Separator in self.board.separators:
 			Separator.CompleteSquare()
-			
-<<<<<<< HEAD
+
 			
 	# close the gamespace
 	def Quit(self):
@@ -153,8 +152,6 @@ class GameSpace:
 		
 		# if so, determine winner
 		return
-=======
->>>>>>> 9d5a55f055d73afc25369e913104ea680982a8eb
 
 # The screen when the game is being played (as opposed to the lobby)
 class GameBoard(pygame.Surface):
