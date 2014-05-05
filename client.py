@@ -147,7 +147,7 @@ class Server(Protocol,QObject):
 		print "Game instance initialized."
 		reactor.gs.protocol = self
 		# start game loop
-		self.lc = LoopingCall(self.runGameLoop)
+		self.lc = LoopingCall(reactor.gs.loop)
 		self.lc.start(1/60)
 
 	
@@ -176,16 +176,6 @@ class Server(Protocol,QObject):
 			self.chatSignal.emit("You won against " + self.challenger + "!")
 		elif msg == "lost":
 			self.chatSignal.emit("You lost against " + self.challenger + ".")
-
-	def runGameLoop(self):
-		retValue = reactor.gs.loop()
-		if retValue == "Quit":
-			reactor.gs.Quit()
-			self.lc.stop()
-		elif retValue == "Won":
-			pass
-		elif retValue == "Lost":
-			pass
 
 	def guiExit(self):
 		quitting = True
