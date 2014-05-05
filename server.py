@@ -95,9 +95,21 @@ class Client(Protocol):
 			available.append(self.username)
 			users[toNotify].transport.write("forfeit:" + toNotify)
 
+		elif dataArray[0] == "lost":
+			winner = dataArray[1]
+			users[winner].transport.write("winner:null")
+	
+		elif dataArray[0] == "won":
+			loser = dataArray[1]
+			users[loser].transport.write("loser:null")
+
+		elif dataArray[0] == "tied":
+			tier = dataArray[1]
+			users[tier].transport.write("tied:null")
+
 		elif dataArray[0] == "available":
 			available.append(dataArray[1])
-			self.globalUserListUpdate()
+			self.globalUserListUpdate(self)
 
 		elif dataArray[0] == "chat":
 			message = "chat:" + self.username + " >> " + dataArray[1]

@@ -14,7 +14,6 @@ from twisted.internet.defer import DeferredQueue
 # import system stuff
 import os, sys
 import threading
-import time
 
 # import gui
 from gui import guiQT
@@ -123,6 +122,24 @@ class Server(Protocol,QObject):
 			reactor.gs.quietQuit()
 			self.transport.write("refresh:null")
 
+		elif (data[0] == 'winner'):
+			self.chatSignal.emit("You won against " + self.challenger + "!")
+			# tell the server that you're available
+			self.transport.write("available:" + self.username + ":" self.challenger)
+			reactor.gs.quietQuit()
+
+		elif (data[0] == 'loser'):
+			self.chatSignal.emit("You lost against " + self.challenger + ".")
+			# tell the server that you're available
+			self.transport.write("available:" + self.username + ":" self.challenger)
+			reactor.gs.quietQuit()
+
+		elif (data[0] == 'tied'):
+			self.chatSignal.emit("You tied " + self.challenger + ".")
+			# tell the server that you're available
+			self.transport.write("available:" + self.username + ":" self.challenger)
+			reactor.gs.quietQuit()
+
 		elif (data[0] == 'users' and data[2] == 'available'):
 			userList = data[1]
 			availableList = data[3]
@@ -180,12 +197,13 @@ class Server(Protocol,QObject):
 		elif msg == "won":
 			# move has already been sent to other person
 			self.chatSignal.emit("You won against " + self.challenger + "!")
+			self.transport.write("won:" + self.challenger)
 		elif msg == "lost":
 			self.chatSignal.emit("You lost against " + self.challenger + ".")
+			self.transport.write("lost:" + self.challenger)
 		elif msg == "tied":
 			self.chatSignal.emit("You tied " + self.challenger + ".")
-		# tell the server that you're available
-		self.transport.write("available:" + self.username + ":")
+			self.transport.write("tied:" + self.challenger)
 
 	def guiExit(self):
 		quitting = True
