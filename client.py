@@ -112,6 +112,11 @@ class Server(Protocol,QObject):
 			moveID = data[1]
 			reactor.gs.opponentMove(moveID)
 
+		elif (data[0] == 'forfeit'):
+			self.chatSignal.emit("SERVER MESSAGE: " + self.challenger + " forfeited.")
+			self.inGame = False
+			self.reactor.gs.quietQuit()
+
 		elif (data[0] == 'users' and data[2] == 'available'):
 			userList = data[1]
 			availableList = data[3]
@@ -158,11 +163,28 @@ class Server(Protocol,QObject):
 	def startQueuing(self):
 		self.queue.get().addCallback(self.queueData)
 
+	def gameEnded(self,msg):
+		self.inGame = False
+		msg = msg.rstrip()
+		if msg == "forfeit":
+			# need to notify other person that the game has ended
+			self.transport.write("forfeit:" + self.challenger)
+			self.chatSignal.emit("You forfeited the game against " + self.challenger + ".")
+		elif msg == "won":
+			# move has already been sent to other person
+			self.chatSignal.emit("You won against " + self.challenger + "!")
+		elif msg == "lost":
+			self.chatSignal.emit("You lost against " + self.challenger + ".")
+
 	def runGameLoop(self):
 		retValue = reactor.gs.loop()
-		if retValue == "GameOver":
+		if retValue == "Quit":
 			reactor.gs.Quit()
 			self.lc.stop()
+		elif retValue == "Won":
+			pass
+		elif retValue == "Lost":
+			pass
 
 	def guiExit(self):
 		quitting = True
