@@ -97,7 +97,7 @@ class Server(Protocol,QObject):
 			else:
 				reactor.gs.turn = "Other"
 
-		if (cmmd == 'reject'):
+		elif (cmmd == 'reject'):
 			# Someone has rejected your game challenge:
 			#    reject:null
 			self.inGame = False

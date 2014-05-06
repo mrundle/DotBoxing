@@ -187,12 +187,17 @@ class GameSpace:
 	# check for the end of the game
 	def CheckForWin(self):
 	
+		# update scores
+		self.CompleteSquares()
+	
 		# check to see if all Separators have been clicked
 		for Separator in self.board.separators:
 			if Separator.clicked == False:
 				return
 		
 		print "WIN_COND_TRIGGERED"
+		# update display one more time
+		self.loop()
 		# if so, determine winner
 		if self.MyScore.score > self.OpponentScore.score:
 			# I win!
@@ -382,7 +387,7 @@ class Separator(pygame.sprite.Sprite):
 		# check for squares
 		if self.left_neighbor.clicked==self.right_neighbor.clicked==self.far_neighbor.clicked==self.clicked==True:
 			
-			# if square is complete, fill in the square with the appropriate color
+			# if square is complete, update score
 			if self.gs.lastclick == "Opponent":
 				fill_color = self.gs.opponent_color
 				self.gs.OpponentScore.score += 1
@@ -397,6 +402,7 @@ class Separator(pygame.sprite.Sprite):
 				print "Error: Improper last click mechanism"
 				self.gs.quietQuit()
 				
+			# fill in square
 			square_width = self.gs.board.interval - self.gs.board.dot_radius*2
 			square = pygame.Rect(self.rect.x+3, self.rect.y-square_width+5,square_width-6,square_width-6)
 			pygame.draw.rect(self.gs.board,fill_color,square)
