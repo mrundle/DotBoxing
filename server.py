@@ -18,111 +18,162 @@ waiting = [] 	# users waiting for random assignment
 available = []  # users available for gameplay
 
 class Client(Protocol):
+
 	def __init__(self):
 		self.username = ''
+		# initialize queue
+		self.queue = DeferredQueue()
+		# Start queueing incoming data
+		self.startQueuing()
 
+	# Called from Twisted upon new connection
 	def connectionMade(self):
 		print "connected to new client"
 
+	# Called from Twisted upon incoming data
+	# TODO: Queue this data
 	def dataReceived(self,data):
-		print "received data = " + data
-		data = data.rstrip()
-		# should come in the form of "id:username"
-		dataArray = data.split(':')
+		self.queue.put(data)
 
-		if dataArray[0] == "id":
-			# user is attempting to create a username
+	# Continuously grabs data from the 
+	def queueData(self,data):
+		data = data.rstrip()
+		self.handleData(data)
+		self.queue.get().addCallback(self.queueData)
+
+	# Kicks off the queueData loop
+	def startQueuing(self):
+		self.queue.get().addCallback(self.queueData)
+
+	# Handle data sent by clients
+	def handleData(self,data):
+		print "received data = " + data # DEBUG!!!
+
+		# Get rid of pesky trailing whitespace
+		data = data.rstrip()
+
+		# All messages should come in the colon dilineated form:
+		#    element:element:element ... and so on
+		dataArray = data.split(':')
+		cmmd = dataArray[0]
+
+		if cmmd == "id":
+			# Client is attempting to create a username
+			#    id:<proposedName>
 			name = dataArray[1]
-			# check to see if it is already in use
-			if name in users or name == '':
-				# if so, send "reidentify"
+			# check to see if it is already in use, or is blank, or contains '+' or ':'
+			if name in users or name == '' or ':' in name or '+' in name:
 				self.transport.write("reidentify")
 			else:
-				self.username = name
-				users[self.username] = self
-				available.append(self.username)
+				# Name is valid!
+				self.username = name             # store
+				users[self.username] = self      # add ref to userList
+				available.append(self.username)  # append name to available
 				# Notify everyone what happened
 				self.globalUserListUpdate()
 
-		elif dataArray[0] == "challenge":
-			print data
-			toChallenge = dataArray[1].rstrip()
+		elif cmmd == "challenge":
+			# Client is challenging another user
+			#     challenge:<username>
+			toChallenge = dataArray[1]
 			if toChallenge in available:
-				# challenge the other user
-				print self.username + " is about to challenge " + toChallenge
 				users[toChallenge].transport.write("challenge:" + self.username)
 			else:
 				self.transport.write("msg:" + "CHALLENGE FAILED. User \"" + toChallenge + "\" is either not available or doesn't exist.")
 
-		elif dataArray[0] == "confirmChallenge":
+		elif cmmd == "confirmChallenge":
+			# Client is accepting a challenge from another user
+			#     confirmChallenge:<selfUsername>:<opponentUsername>
 			user1 = dataArray[1]
 			user2 = dataArray[2]
 			# Remove from available
 			if user1 in available: available.remove(user1)
 			if user2 in available: available.remove(user2)
+			# Notify each user of the game:
+			#    opponent:<username>:<turnOrder>
 			users[user1].transport.write("opponent:" + user2 + ":1")
 			users[user2].transport.write("opponent:" + user1 + ":2")
 
-		elif dataArray[0] == "rejectChallenge":
-			# notify other user of rejection
-			users[dataArray[1]].transport.write("reject")
+		elif cmmd == "rejectChallenge":
+			# Client is rejecting a challenge from another user:
+			#    reject:<username>
+			rejectedChallenger = dataArray[1]
+			# Notify the rejected challenger
+			users[rejectedChallenger].transport.write("reject")
 
-		elif dataArray[0] == "getGame":
-			# LOOP UNTIL OPPENENTS ARE ASSIGNED
+		# TODO: currently un-utilized. Useful for random placement.
+		# Note: This is what uses the 'waiting' list
+		elif cmmd == "getGame":
 			assigned = False
-			self.printUsers()
-			self.printWaiting()
 			for user in waiting:
 				if user != self.username:
-					print "ASSIGNED " + self.username + " TO " + user
-					turn = 0
-					# the user waiting the longest will have first turn
-					turn = turn + 1
-					self.transport.write("opponent:" + user + ":" + str(turn))
-					# the user just joining will have the second turn
-					turn = turn + 1
-					users[user].transport.write("opponent:" + self.username + ":" + str(turn))
+					# Notify both users of gamee:
+					#    opponent:<opponentName>:<turnOrder>
+					self.transport.write("opponent:" + user + ":1")
+					users[user].transport.write("opponent:" + self.username + ":2")
+					# Remove users from waiting list
 					waiting.remove(user)
 					waiting.remove(self.username)
 
-		elif dataArray[0] == "move":
-			destination = dataArray[1].rstrip()
-			moveID      = dataArray[2].rstrip()
-			users[destination].transport.write("opponentMove:"+moveID)
-			# TODO catch key error exception
+		elif cmmd == "move":
+			# Client is sending a move to another user
+			#    move:<opponent>:<moveID>
+			opponent = dataArray[1].rstrip()
+			moveID = dataArray[2].rstrip()
+			# Notify the opponent of the move
+			users[opponent].transport.write("opponentMove:"+moveID)
 
-		elif dataArray[0] == "forfeit":
-			toNotify = dataArray[1]
-			available.append(toNotify)
+		elif cmmd == "forfeit":
+			# Client has forfeited the game (or prematurely exited/quit)
+			opponent = dataArray[1]
+			# Add both users to Available list
+			available.append(opponent)
 			available.append(self.username)
-			users[toNotify].transport.write("forfeit:" + toNotify)
+			# Notify the opponent of the forfeit
+			# The opponent will then call refresh and trigger a globalUserListUpdate
+			users[opponent].transport.write("forfeit:" + opponent)
 
-		elif dataArray[0] == "lost":
-			winner = dataArray[1]
-			users[winner].transport.write("winner:null")
+		elif cmmd == "lost":
+			# Client is notifying us that they have lost to their opponent:
+			#    lost:<opponent>
+			opponent = dataArray[1]
+			# Notify the opponent of their win
+			users[opponent].transport.write("winner:null")
 	
-		elif dataArray[0] == "won":
-			loser = dataArray[1]
-			users[loser].transport.write("loser:null")
+		elif cmmd == "won":
+			# Client is notifying us that they have beat their opponent:
+			#    won:<opponent>
+			opponent = dataArray[1]
+			# Notify the opponent of their loss
+			users[opponent].transport.write("loser:null")
 
-		elif dataArray[0] == "tied":
-			tier = dataArray[1]
-			users[tier].transport.write("tied:null")
+		elif cmmd == "tied":
+			# Client is notifying us that they have tied their opponent:
+			#    tied:<opponent>
+			opponent = dataArray[1]
+			# Notify the opponent of tie game
+			users[opponent].transport.write("tied:null")
 
-		elif dataArray[0] == "available":
+		elif cmmd == "available":
+			# Client is notifying server that they (and an opponent) are available
+			#     available:<user1>:<user2>
 			available.append(dataArray[1])
 			available.append(dataArray[2])
+			# Everyone needs to know about this!
 			self.globalUserListUpdate()
 
-		elif dataArray[0] == "chat":
+		elif cmmd == "chat":
 			message = "chat:" + self.username + " >> " + dataArray[1]
 			# send this message to all other users
 			for user in users:
 				users[user].transport.write(message)
 
-		elif dataArray[0] == "refresh":
+		elif cmmd == "refresh":
 			self.globalUserListUpdate()
 
+	# Sends out list of Online and Available users to all connected users:
+	#    users:bob+tom+amy+kim+:available:bot+amy+
+	# Client file is responsible for stripping trailing '+' marks.
 	def globalUserListUpdate(self):
 		onlineUsers = ''
 		availableUsers = ''
@@ -132,16 +183,6 @@ class Client(Protocol):
 			availableUsers = availableUsers + user + "+"
 		for user in users:
 			users[user].transport.write("users:" + onlineUsers + ":available:" + availableUsers)
-			
-	def printUsers(self):
-		print "current list of users: "
-		for key in users:
-			print key
-
-	def printWaiting(self):
-		print "current list of waiting users: "
-		for user in waiting:
-			print user
 		
 
 	def connectionLost(self,reason):
@@ -160,6 +201,7 @@ class Client(Protocol):
 		# Notify others that connection has been lost
 		self.globalUserListUpdate()
 
+# Simply builds the Client protocol
 class ClientFactory(Factory):
 	def buildProtocol(self,addr):
 		return Client()
