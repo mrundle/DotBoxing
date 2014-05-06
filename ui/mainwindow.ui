@@ -6,27 +6,75 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>510</width>
-    <height>561</height>
+    <width>486</width>
+    <height>521</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Liberation Sans</family>
+    <pointsize>11</pointsize>
+    <kerning>true</kerning>
+   </font>
+  </property>
+  <property name="cursor">
+   <cursorShape>ArrowCursor</cursorShape>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(117,38,39)</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <widget class="QLabel" name="label_2">
+      <property name="font">
+       <font>
+        <family>Liberation Sans</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255,255,255)</string>
+      </property>
       <property name="text">
        <string>Available</string>
       </property>
      </widget>
     </item>
     <item row="1" column="0" rowspan="2">
-     <widget class="QListWidget" name="availableList"/>
+     <widget class="QListWidget" name="availableList">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(237,242,201)</string>
+      </property>
+     </widget>
     </item>
     <item row="1" column="1">
      <widget class="QPushButton" name="challengeButton">
+      <property name="font">
+       <font>
+        <family>Liberation Sans</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(237,242,201)</string>
+      </property>
       <property name="text">
        <string>Challenge User</string>
       </property>
@@ -34,6 +82,17 @@
     </item>
     <item row="2" column="1">
      <widget class="QPushButton" name="randomGameButton">
+      <property name="font">
+       <font>
+        <family>Liberation Sans</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(237,242,201)</string>
+      </property>
       <property name="text">
        <string>Random Game</string>
       </property>
@@ -41,6 +100,17 @@
     </item>
     <item row="3" column="0">
      <widget class="QLabel" name="label">
+      <property name="font">
+       <font>
+        <family>Liberation Sans</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255,255,255)</string>
+      </property>
       <property name="text">
        <string>Online</string>
       </property>
@@ -51,6 +121,21 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(237,242,201)</string>
+      </property>
       <property name="autoScroll">
        <bool>true</bool>
       </property>
@@ -59,22 +144,20 @@
     <item row="6" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
        <widget class="QLabel" name="usernameLable">
+        <property name="font">
+         <font>
+          <family>Liberation Sans</family>
+          <pointsize>12</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="layoutDirection">
          <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: rgb(255,255,255)</string>
         </property>
         <property name="text">
          <string>&gt;&gt;</string>
@@ -100,6 +183,9 @@
           <width>258</width>
           <height>0</height>
          </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(237,242,201)</string>
         </property>
        </widget>
       </item>
@@ -136,20 +222,16 @@
       <property name="enabled">
        <bool>false</bool>
       </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(237,242,201)</string>
+      </property>
      </widget>
-    </item>
-    <item row="6" column="1">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
     </item>
    </layout>
   </widget>
@@ -158,7 +240,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>510</width>
+     <width>486</width>
      <height>25</height>
     </rect>
    </property>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/challenge.ui'
 #
-# Created: Mon May  5 14:12:55 2014
+# Created: Tue May  6 12:02:09 2014
 #      by: PyQt4 UI code generator 4.6.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,15 +13,37 @@ class Ui_challenge(object):
     def setupUi(self, challenge):
         challenge.setObjectName("challenge")
         challenge.resize(376, 134)
+        challenge.setStyleSheet("background-color: rgb(117,38,39)")
         self.gridLayout = QtGui.QGridLayout(challenge)
         self.gridLayout.setObjectName("gridLayout")
         self.label = QtGui.QLabel(challenge)
+        font = QtGui.QFont()
+        font.setFamily("Liberation Sans")
+        font.setPointSize(12)
+        font.setWeight(75)
+        font.setBold(True)
+        self.label.setFont(font)
+        self.label.setStyleSheet("color: rgb(255,255,255)")
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 0, 1, 1, 1)
         self.acceptButton = QtGui.QPushButton(challenge)
+        font = QtGui.QFont()
+        font.setFamily("Liberation Sans")
+        font.setPointSize(12)
+        font.setWeight(75)
+        font.setBold(True)
+        self.acceptButton.setFont(font)
+        self.acceptButton.setStyleSheet("background-color: rgb(237,242,201)")
         self.acceptButton.setObjectName("acceptButton")
         self.gridLayout.addWidget(self.acceptButton, 1, 1, 1, 1)
         self.rejectButton = QtGui.QPushButton(challenge)
+        font = QtGui.QFont()
+        font.setFamily("Liberation Sans")
+        font.setPointSize(12)
+        font.setWeight(75)
+        font.setBold(True)
+        self.rejectButton.setFont(font)
+        self.rejectButton.setStyleSheet("background-color: rgb(237,242,201)")
         self.rejectButton.setObjectName("rejectButton")
         self.gridLayout.addWidget(self.rejectButton, 1, 2, 1, 1)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)

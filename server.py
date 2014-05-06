@@ -1,6 +1,7 @@
 # DotBoxing Server Code
 # Matt Mahan and Matt Rundle
 # Programming Paradigms PyGameTwisted Project
+
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.defer import DeferredQueue
@@ -62,7 +63,7 @@ class Client(Protocol):
 			#    id:<proposedName>
 			name = dataArray[1]
 			# check to see if it is already in use, or is blank, or contains '+' or ':'
-			if name in users or name == '' or ':' in name or '+' in name:
+			if name in users or name == '' or ':' in name or '+' in name or len(dataArray) > 2:
 				self.transport.write("reidentify")
 			else:
 				# Name is valid!
@@ -91,29 +92,47 @@ class Client(Protocol):
 			if user2 in available: available.remove(user2)
 			# Notify each user of the game:
 			#    opponent:<username>:<turnOrder>
-			users[user1].transport.write("opponent:" + user2 + ":1")
-			users[user2].transport.write("opponent:" + user1 + ":2")
+			if user1 in users:
+				users[user1].transport.write("opponent:" + user2 + ":1")
+			else:
+				available.add(user2)
+			if user2 in users:
+				users[user2].transport.write("opponent:" + user1 + ":2")
+			else:
+				available.add(user1)
 
 		elif cmmd == "rejectChallenge":
 			# Client is rejecting a challenge from another user:
-			#    reject:<username>
+			#    rejectChallenge:<username>
 			rejectedChallenger = dataArray[1]
 			# Notify the rejected challenger
-			users[rejectedChallenger].transport.write("reject")
+			if rejectedChallenger in users:
+				users[rejectedChallenger].transport.write("reject")
 
 		# TODO: currently un-utilized. Useful for random placement.
 		# Note: This is what uses the 'waiting' list
 		elif cmmd == "getGame":
-			assigned = False
+			# Add user to the waiting list
+			waiting.append(self.username)
+			# If anyone else in list, start game
 			for user in waiting:
 				if user != self.username:
 					# Notify both users of gamee:
 					#    opponent:<opponentName>:<turnOrder>
-					self.transport.write("opponent:" + user + ":1")
-					users[user].transport.write("opponent:" + self.username + ":2")
-					# Remove users from waiting list
-					waiting.remove(user)
-					waiting.remove(self.username)
+					if user in users: 
+						self.transport.write("opponent:" + user + ":1")
+						users[user].transport.write("opponent:" + self.username + ":2")
+						# Remove users from waiting list
+						if user in waiting:
+							waiting.remove(user)
+						if self.username in waiting:
+							waiting.remove(self.username)
+						# Also remove from available list
+						if user in available:
+							available.remove(user)
+						if self.username in available:
+							available.remove(self.username)
+			# If no one else in list, they will wait for someone else to pick them up
 
 		elif cmmd == "move":
 			# Client is sending a move to another user
@@ -121,7 +140,11 @@ class Client(Protocol):
 			opponent = dataArray[1].rstrip()
 			moveID = dataArray[2].rstrip()
 			# Notify the opponent of the move
-			users[opponent].transport.write("opponentMove:"+moveID)
+			if opponent in users:
+				users[opponent].transport.write("opponentMove:"+moveID)
+			else:
+				# If the other user isn't there, they have forfeited
+				self.transport.write("forfeit:null")
 
 		elif cmmd == "forfeit":
 			# Client has forfeited the game (or prematurely exited/quit)
@@ -131,28 +154,32 @@ class Client(Protocol):
 			available.append(self.username)
 			# Notify the opponent of the forfeit
 			# The opponent will then call refresh and trigger a globalUserListUpdate
-			users[opponent].transport.write("forfeit:" + opponent)
+			if opponent in users:
+				users[opponent].transport.write("forfeit:" + opponent)
 
 		elif cmmd == "lost":
 			# Client is notifying us that they have lost to their opponent:
 			#    lost:<opponent>
 			opponent = dataArray[1]
 			# Notify the opponent of their win
-			users[opponent].transport.write("winner:null")
+			if opponent in users:
+				users[opponent].transport.write("winner:null")
 	
 		elif cmmd == "won":
 			# Client is notifying us that they have beat their opponent:
 			#    won:<opponent>
 			opponent = dataArray[1]
 			# Notify the opponent of their loss
-			users[opponent].transport.write("loser:null")
+			if opponent in users:
+				users[opponent].transport.write("loser:null")
 
 		elif cmmd == "tied":
 			# Client is notifying us that they have tied their opponent:
 			#    tied:<opponent>
 			opponent = dataArray[1]
 			# Notify the opponent of tie game
-			users[opponent].transport.write("tied:null")
+			if opponent in users:
+				users[opponent].transport.write("tied:null")
 
 		elif cmmd == "available":
 			# Client is notifying server that they (and an opponent) are available
