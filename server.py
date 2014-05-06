@@ -5,14 +5,17 @@ from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.defer import DeferredQueue
 
+# Port that the server will run on
+# Note: Clients (client.py) must connect to THIS port number.
 LISTEN_PORT = 40035
 
-# key: username
-# val: connection instance
-# use: users[username].transport.write(...)
-users = {}
-waiting = [] # add to this when users want to randomly get assigned - then call getGame
-available = []
+# Other global data structures
+users = {}      # Current Users 
+                # key: username
+                # val: connection instance
+                # use: users[username].transport.write(...)
+waiting = [] 	# users waiting for random assignment
+available = []  # users available for gameplay
 
 class Client(Protocol):
 	def __init__(self):
@@ -35,7 +38,6 @@ class Client(Protocol):
 				# if so, send "reidentify"
 				self.transport.write("reidentify")
 			else:
-				# if not, add to users and available and send "idConfirmed"
 				self.username = name
 				users[self.username] = self
 				available.append(self.username)
