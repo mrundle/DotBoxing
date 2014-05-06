@@ -21,18 +21,6 @@ from gui import guiQT
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-######################################################################
-#
-#	SERVER PROTOCOL CLASS
-#	------------------------------------------------------------------
-#	- Handles the connection with the server
-#       - Responsible for parsing incoming messages, interpreting
-#         them, and taking appropriate action (including sending
-#         additional data to the server.)
-#	- Instantiates a PyQt GUI which mediates user interaction
-#		- NOTE: the GUI is passed a reference of this protocol
-######################################################################
-
 class Server(Protocol,QObject):
 
 	# Initialize PyQt Signals
