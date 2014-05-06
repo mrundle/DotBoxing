@@ -1,6 +1,7 @@
 # DotBoxing Game Code
 # Matt Mahan and Matt Rundle
 # Programming Paradigms PyGameTwisted Project
+
 import pygame
 import math
 import sys
@@ -10,6 +11,7 @@ import getopt
 from socket import *
 from pygame.locals import *
 
+# Main game state object
 class GameSpace:
 
 	def __init__(self,reactor):
@@ -19,7 +21,6 @@ class GameSpace:
 		pygame.mixer.init()
 
 		# set up gamespace variable
-		self.turn = "Mine"
 		self.quit_condition = "forfeit"
 		self.GameOver = False
 
@@ -36,7 +37,7 @@ class GameSpace:
 		
 		
 		# visual parameters - set here for ease of adjusting game layout
-		self.dot_number = 3 # number of dots on one side of the square
+		self.dot_number = 4 # number of dots on one side of the square
 		self.player_color = self.blue # color of player seperators and won squares
 		self.opponent_color = self.red # color of opponent seperators and won squares
 		self.margin = 80 # margin between dots and edge of screen
@@ -63,9 +64,12 @@ class GameSpace:
 		self.OpponentScore = Score(self)
 		self.OpponentScore.text = "Opponent's Score: "
 		self.OpponentScore.update()
+		self.Turn = TurnIndicator(self)
+		self.Turn.My_Turn()
 		
-		print "GameSpace initialized"
+		# print "GameSpace initialized"
 
+	# Game loop (called in client.py)
 	def loop(self):
 
 		# Code for one loop of the game logic
@@ -99,6 +103,7 @@ class GameSpace:
 			self.screen.blit(Separator.image,Separator.rect)
 		self.screen.blit(self.MyScore.image,(5,5))
 		self.screen.blit(self.OpponentScore.image,(5,20))
+		self.screen.blit(self.Turn.image,(5,self.height-30))
 		
 		# Flip the display
 		pygame.display.flip()
@@ -117,12 +122,12 @@ class GameSpace:
 			return
 		
 		# skip if its my turn
-		if self.turn == "Mine":
+		if self.Turn.turn_text == self.Turn.me:
 			return
 			
 		# error check for improper turn handling
-		if self.turn != "Other":
-			print "Error: Improper turn handling"
+		if self.Turn.turn_text != self.Turn.opponent:
+			# print "Error: Improper turn handling"
 			self._Quit()
 			
 		# Find Separator
@@ -137,7 +142,7 @@ class GameSpace:
 		pygame.draw.polygon(Separator.image,Separator.color,Separator.pointlist)
 			
 		# switch turn
-		self.turn = "Mine"
+		self.Turn.My_Turn()
 		Separator.clicked = True
 		self.lastclick = "Opponent"
 		
@@ -195,7 +200,7 @@ class GameSpace:
 			if Separator.clicked == False:
 				return
 		
-		print "WIN_COND_TRIGGERED"
+		# print "WIN_COND_TRIGGERED"
 		# update display one more time
 		self.loop()
 		# if so, determine winner
@@ -338,11 +343,11 @@ class Separator(pygame.sprite.Sprite):
 	def On_Click(self):
 	
 		# skip if not my turn
-		if self.gs.turn == "Other":
+		if self.gs.Turn.turn_text == self.gs.Turn.opponent:
 			return
 			
 		# error check for improper turn handling
-		if self.gs.turn != "Mine":
+		if self.gs.Turn.turn_text != self.gs.Turn.me:
 			print "Error: Improper turn handling"
 			self.gs._Quit()
 			
@@ -363,7 +368,7 @@ class Separator(pygame.sprite.Sprite):
 			# switch turn and indicate clicked
 			self.clicked = True
 			self.gs.lastclick = "Me"
-			self.gs.turn = "Other"
+			self.gs.Turn.Opponents_Turn()
 			self.gs.protocol.sendMove(self.id)
 			
 		
@@ -392,12 +397,12 @@ class Separator(pygame.sprite.Sprite):
 				fill_color = self.gs.opponent_color
 				self.gs.OpponentScore.score += 1
 				self.gs.OpponentScore.update()
-				self.gs.turn = "Other" # Opponent gets another turn
+				self.gs.Turn.Opponents_Turn() # Opponent gets another turn
 			elif self.gs.lastclick == "Me":
 				fill_color = self.gs.player_color
 				self.gs.MyScore.score += 1
 				self.gs.MyScore.update()
-				self.gs.turn = "Mine" # I get another turn
+				self.gs.Turn.My_Turn() # I get another turn
 			else:
 				print "Error: Improper last click mechanism"
 				self.gs.quietQuit()
@@ -408,7 +413,7 @@ class Separator(pygame.sprite.Sprite):
 			pygame.draw.rect(self.gs.board,fill_color,square)
 			self.complete = True
 	
-		
+# class for score text objects
 class Score(pygame.font.Font):
 
 	def __init__(self,gs):
@@ -434,5 +439,36 @@ class Score(pygame.font.Font):
 		self.image = self.render(self.full_text,1,self.gs.black)
 	
 	
+# class for turn tracker and turn indicator text
+class TurnIndicator(pygame.font.Font):
 
+	def __init__(self,gs):
+		
+		# initial setup
+		pygame.font.Font.__init__(self,None,32)
+		self.gs = gs
+		
+		# initialize surface
+		self.me = "My turn"
+		self.opponent = "Opponent's turn"
+		self.turn_text = self.me
+		self.image = self.render(self.turn_text,1,self.gs.black)
+		
+		
+	# function to change the turn to my turn
+	def My_Turn(self):
+		
+		self.turn_text = self.me
+		self.image = self.render(self.turn_text,1,self.gs.black)
+		
+	# function to change the turn to the opponent's turn
+	def Opponents_Turn(self):
+	
+		self.turn_text = self.opponent
+		self.image = self.render(self.turn_text,1,self.gs.black)
+		
+		
+		
+		
+		
 

@@ -93,9 +93,9 @@ class Server(Protocol,QObject):
 			# tell the game who's turn it is
 			turn = data[2]
 			if turn == "1":
-				reactor.gs.turn = "Mine"
+				reactor.gs.Turn.My_Turn()
 			else:
-				reactor.gs.turn = "Other"
+				reactor.gs.Turn.Opponents_Turn()
 
 		elif (cmmd == 'reject'):
 			# Someone has rejected your game challenge:
