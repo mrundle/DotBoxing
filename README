@@ -1,2 +1,23 @@
 DotBoxing is a networking, computer version of the popular napkin game, also known as squares, dots, dots and boxes, etc. 
-It uses a server-client architecture to connect players. 
+It uses a server-client architecture to connect players.
+
+To run the game:
+
+Run the server on whatever machine you'd like, (just keep track of the hostname!):
+
+	python server.py
+
+Then, to run the game as a user, go into client.py and edit the "SERVER_HOST"
+variable to reflect the machine that the server is currently running on.
+(Note, this is on line 5 in client.py). Then run the game:
+
+	python client.py
+
+From here, enter a username and you're ready to go! Use the chat bar
+to talk to other players, select users from the "Available" box and
+challenge them to games, or just click the "Random Game" button to wait
+for someone else to challenge you to play!
+
+Note: Multiple users can and should use this game at once! The more the
+merrier. Only one running server is necessary at any one time; all users
+should simply connect to that one. 
