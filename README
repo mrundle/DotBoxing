@@ -21,3 +21,11 @@ for someone else to challenge you to play!
 Note: Multiple users can and should use this game at once! The more the
 merrier. Only one running server is necessary at any one time; all users
 should simply connect to that one. 
+
+To play the game, users connect dots by clicking on the lines between dots. 
+The players take turns filling in the lines. When a user completes a square,
+they get a point, and get to take another turn. Lines and squares that the
+player has  filled turn blue, while lines and squares filled by their opponent
+turn red. When all squares are complete, the game is over, and the player with
+the most points wins. The game may be resigned at any time by closing the
+window.
