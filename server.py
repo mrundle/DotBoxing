@@ -29,7 +29,7 @@ class Client(Protocol):
 
 	# Called from Twisted upon new connection
 	def connectionMade(self):
-		print "connected to new client"
+		pass
 
 	# Called from Twisted upon incoming data
 	# TODO: Queue this data
@@ -48,7 +48,6 @@ class Client(Protocol):
 
 	# Handle data sent by clients
 	def handleData(self,data):
-		print "received data = " + data # DEBUG!!!
 
 		# Get rid of pesky trailing whitespace
 		data = data.rstrip()
@@ -213,7 +212,6 @@ class Client(Protocol):
 		
 
 	def connectionLost(self,reason):
-		print "dropped client connection (" + self.username + ")"
 		# delete from users list
 		try:
 			del users[self.username]
